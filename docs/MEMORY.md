@@ -1,6 +1,6 @@
 # MEMORY — current state (update at the end of EVERY session)
 
-Last updated: 2026-10-22 by: planning pack author
+Last updated: 2026-10-22 by: agent (TASK-020)
 
 ## Done
 - Documentation pack created and audited.
@@ -23,18 +23,17 @@ Last updated: 2026-10-22 by: planning pack author
   - TASK-016: `generateInsight` implemented in `lib/domain/insight_engine.dart` returning typed `Insight` with parameter maps, priority-ordered rules matching DOMAIN_SPEC, and income rules configurable behind flags.
   - TASK-017: `MonthBalance` and `BudgetRing` implemented in `lib/domain/balance_calculator.dart` with negative balance formatting ("-Br 250.00"), ceiling priority (budget > income), and 80%/100% alert thresholds matching all vectors.
   - TASK-018: FNV-1a 32-bit stable cross-platform hash and bilingual initials extraction implemented in `lib/domain/avatar_utils.dart` tested with English and Amharic names.
+- Phase 2 (Data Layer) In Progress:
+  - TASK-020: Drift SQLite database implemented in `lib/data/db/` (`tables.dart`, `app_database.dart`, `app_database.g.dart`) with schema version 1. All 8 tables (`expenses`, `check_items`, `ledger_entries`, `budgets`, `contacts`, `user_categories`, `outbox`, `sync_meta`), constraints, default values (`user_id = 'LOCAL'`), and 10 query optimization indexes created. In-memory testing constructor and schema migration test harness implemented with 100% passing tests.
 
 ## In progress
 - Phase 2: Data Layer (Drift SQLite local DB, repositories, outbox sync).
-  - Next: TASK-020: Drift DB, all tables, indexes, schema version 1, migration test harness.
+  - Next: TASK-021: ExpenseRepository (expense+income): CRUD, soft delete, today/week/month totals, by-category, income/expense/balance.
 
 ## Next
 - TASK-021: ExpenseRepository.
 - TASK-022: CheckRepository.
-
-## Next
-1. Complete TASK-003 -> TASK-006 (Phase 0).
-2. Phase 1 Domain engine (pure Dart, vector-driven).
+- TASK-023: LedgerRepository.
 
 ## Known issues / risks
 - Web schema to be diffed against proposed schema.
