@@ -1,0 +1,386 @@
+{
+  "_meta": {
+    "note": "Expected outputs computed from the exact rules in the Build Bible (calcCheck, calcValueScore, greeting, dayLabel). They are NOT yet verified against the web app's lib/utils.ts (OPEN-004). When the web file is available, re-run these cases against it and reconcile before trusting them.",
+    "generated": "2026-10-22"
+  },
+  "calcCheck": [
+    {
+      "price": 100,
+      "uses": 200,
+      "costPerUse": 0.5,
+      "verdict": "worth",
+      "regret": 1
+    },
+    {
+      "price": 100,
+      "uses": 100,
+      "costPerUse": 1.0,
+      "verdict": "maybe",
+      "regret": 2
+    },
+    {
+      "price": 299,
+      "uses": 100,
+      "costPerUse": 2.99,
+      "verdict": "maybe",
+      "regret": 2
+    },
+    {
+      "price": 300,
+      "uses": 100,
+      "costPerUse": 3.0,
+      "verdict": "maybe",
+      "regret": 2
+    },
+    {
+      "price": 301,
+      "uses": 100,
+      "costPerUse": 3.01,
+      "verdict": "maybe",
+      "regret": 3
+    },
+    {
+      "price": 500,
+      "uses": 100,
+      "costPerUse": 5.0,
+      "verdict": "maybe",
+      "regret": 3
+    },
+    {
+      "price": 501,
+      "uses": 100,
+      "costPerUse": 5.01,
+      "verdict": "not",
+      "regret": 4
+    },
+    {
+      "price": 1000,
+      "uses": 100,
+      "costPerUse": 10.0,
+      "verdict": "not",
+      "regret": 4
+    },
+    {
+      "price": 1001,
+      "uses": 100,
+      "costPerUse": 10.01,
+      "verdict": "not",
+      "regret": 5
+    },
+    {
+      "price": 1250,
+      "uses": 5,
+      "costPerUse": 250.0,
+      "verdict": "not",
+      "regret": 5
+    },
+    {
+      "price": 0,
+      "uses": 10,
+      "costPerUse": 0.0,
+      "verdict": "worth",
+      "regret": 1
+    },
+    {
+      "price": 99.99,
+      "uses": 100,
+      "costPerUse": 0.9998999999999999,
+      "verdict": "worth",
+      "regret": 1
+    }
+  ],
+  "calcCheck_unspecified": [
+    {
+      "price": 100,
+      "uses": 0,
+      "note": "Web behavior unknown (JS gives Infinity -> not/5). UI must block uses < 1 or define behavior. OPEN-006"
+    }
+  ],
+  "calcValueScore": [
+    {
+      "verdicts": [
+        "worth",
+        "worth",
+        "maybe",
+        "not"
+      ],
+      "worthPct": 50,
+      "maybePct": 25,
+      "notPct": 25,
+      "score": 63,
+      "label": "On track"
+    },
+    {
+      "verdicts": [
+        "worth"
+      ],
+      "worthPct": 100,
+      "maybePct": 0,
+      "notPct": 0,
+      "score": 100,
+      "label": "Smart spender"
+    },
+    {
+      "verdicts": [
+        "not",
+        "not",
+        "worth"
+      ],
+      "worthPct": 33,
+      "maybePct": 0,
+      "notPct": 67,
+      "score": 33,
+      "label": "Needs attention"
+    },
+    {
+      "verdicts": [
+        "maybe",
+        "maybe",
+        "worth"
+      ],
+      "worthPct": 33,
+      "maybePct": 67,
+      "notPct": 0,
+      "score": 67,
+      "label": "On track"
+    },
+    {
+      "verdicts": [
+        "not",
+        "not",
+        "not",
+        "worth"
+      ],
+      "worthPct": 25,
+      "maybePct": 0,
+      "notPct": 75,
+      "score": 25,
+      "label": "Needs attention"
+    },
+    {
+      "verdicts": [
+        "not",
+        "not",
+        "not",
+        "not",
+        "worth"
+      ],
+      "worthPct": 20,
+      "maybePct": 0,
+      "notPct": 80,
+      "score": 20,
+      "label": "Review spending"
+    },
+    {
+      "verdicts": [
+        "worth",
+        "not"
+      ],
+      "worthPct": 50,
+      "maybePct": 0,
+      "notPct": 50,
+      "score": 50,
+      "label": "On track"
+    },
+    {
+      "verdicts": [
+        "worth",
+        "maybe",
+        "not"
+      ],
+      "worthPct": 33,
+      "maybePct": 33,
+      "notPct": 33,
+      "score": 50,
+      "label": "On track"
+    }
+  ],
+  "calcValueScore_unspecified": [
+    {
+      "verdicts": [],
+      "note": "total=0 -> division by zero in web. Domain must return null/absent; UI hides the card. OPEN-006"
+    }
+  ],
+  "greeting": [
+    {
+      "hour": 0,
+      "text": "Good morning"
+    },
+    {
+      "hour": 5,
+      "text": "Good morning"
+    },
+    {
+      "hour": 11,
+      "text": "Good morning"
+    },
+    {
+      "hour": 12,
+      "text": "Good afternoon"
+    },
+    {
+      "hour": 17,
+      "text": "Good afternoon"
+    },
+    {
+      "hour": 18,
+      "text": "Good evening"
+    },
+    {
+      "hour": 23,
+      "text": "Good evening"
+    }
+  ],
+  "br": [
+    {
+      "input": 1250,
+      "out": "Br 1,250.00"
+    },
+    {
+      "input": "1250.5",
+      "out": "Br 1,250.50"
+    },
+    {
+      "input": 0,
+      "out": "Br 0.00"
+    },
+    {
+      "input": "abc",
+      "out": "Br 0.00"
+    },
+    {
+      "input": 0.5,
+      "out": "Br 0.50"
+    },
+    {
+      "input": 1234567.89,
+      "out": "Br 1,234,567.89"
+    },
+    {
+      "input": 999.999,
+      "out": "UNSPECIFIED",
+      "note": "JS toLocaleString with minimumFractionDigits:2 and no max defaults max fraction digits to 3, so web may show 'Br 999.999'. Money is stored in 2 decimals so this should not occur; confirm against web utils.ts."
+    }
+  ],
+  "dayLabel": {
+    "nowLocal": "2026-10-22T10:00:00",
+    "cases": [
+      {
+        "date": "2026-10-22",
+        "out": "Today"
+      },
+      {
+        "date": "2026-10-21",
+        "out": "Yesterday"
+      },
+      {
+        "date": "2026-10-20",
+        "out": "Tuesday, Oct 20"
+      },
+      {
+        "date": "2026-01-05",
+        "out": "Monday, Jan 5"
+      }
+    ]
+  },
+  "streak": {
+    "today": "2026-10-22",
+    "cases": [
+      {
+        "days": [
+          "2026-10-22",
+          "2026-10-21",
+          "2026-10-20"
+        ],
+        "streak": 3,
+        "shown": true
+      },
+      {
+        "days": [
+          "2026-10-21",
+          "2026-10-20",
+          "2026-10-19"
+        ],
+        "streak": 3,
+        "shown": true,
+        "note": "nothing today yet: streak still alive"
+      },
+      {
+        "days": [
+          "2026-10-20",
+          "2026-10-19"
+        ],
+        "streak": 0,
+        "shown": false,
+        "note": "yesterday missing and today missing: reset"
+      },
+      {
+        "days": [
+          "2026-10-22",
+          "2026-10-20"
+        ],
+        "streak": 1,
+        "shown": false
+      },
+      {
+        "days": [
+          "2026-10-22",
+          "2026-10-21"
+        ],
+        "streak": 2,
+        "shown": false,
+        "note": "hidden below 3"
+      },
+      {
+        "days": [],
+        "streak": 0,
+        "shown": false
+      }
+    ]
+  },
+  "split": {
+    "note": "PROPOSAL (Bible does not define remainder handling). Integer minor units; remainder distributed one unit each to the first r people in list order.",
+    "cases": [
+      {
+        "totalMinor": 100000,
+        "people": 3,
+        "sharesMinor": [
+          33334,
+          33333,
+          33333
+        ]
+      },
+      {
+        "totalMinor": 100000,
+        "people": 4,
+        "sharesMinor": [
+          25000,
+          25000,
+          25000,
+          25000
+        ]
+      },
+      {
+        "totalMinor": 1,
+        "people": 3,
+        "sharesMinor": [
+          1,
+          0,
+          0
+        ],
+        "note": "edge: UI should require total >= people minor units"
+      }
+    ]
+  },
+  "balance": {
+    "note": "left = income - expense for the current month; negative allowed. How negative is displayed is OPEN-005.",
+    "cases": [
+      {
+        "incomeMinor": 300000,
+        "expenseMinor": 240000,
+        "leftMinor": 60000,
+        "spentPctOfIncome": 80
+      }
+    ]
+  }
+}

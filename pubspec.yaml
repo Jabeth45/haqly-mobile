@@ -1,0 +1,47 @@
+name: haqly_mobile
+description: "Haqly — Offline-first personal finance app for Ethiopia"
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.13.5
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+
+  # State management & Routing
+  flutter_riverpod: ^3.4.3
+  go_router: ^18.1.1
+
+  # Local Database
+  drift: ^2.35.2
+  sqlite3_flutter_libs: ^0.6.0+eol
+  path_provider: ^2.1.6
+  path: ^1.9.1
+
+  # Storage & Remote
+  shared_preferences: ^2.5.6
+  flutter_secure_storage: ^11.2.0
+  supabase_flutter: ^2.18.3
+
+  # Utilities & UI
+  intl: ^0.20.3
+  connectivity_plus: ^7.3.2
+  flutter_slidable: ^4.0.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  drift_dev: ^2.35.1
+  build_runner: ^2.16.2
+
+flutter:
+  uses-material-design: true
+  generate: true

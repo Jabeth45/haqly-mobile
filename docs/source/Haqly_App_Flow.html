@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Haqly — Full App Flow</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+    background: #0a0a0f;
+    color: #f0f0f5;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── Header ── */
+  .header {
+    padding: 28px 32px 20px;
+    border-bottom: 1px solid #1e1e2e;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky; top: 0;
+    background: #0a0a0f;
+    z-index: 100;
+  }
+  .logo { width: 36px; height: 36px; background: #00C47A; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 16px; color: #000; flex-shrink: 0; }
+  .header h1 { font-size: 18px; font-weight: 700; color: #fff; }
+  .header p  { font-size: 12px; color: #666; margin-top: 1px; }
+  .legend { margin-left: auto; display: flex; gap: 16px; flex-wrap: wrap; }
+  .leg { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #888; }
+  .leg-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+  /* ── Layout ── */
+  .canvas { padding: 32px; display: flex; flex-direction: column; gap: 40px; }
+
+  /* ── Row labels ── */
+  .row-wrap { display: flex; flex-direction: column; gap: 12px; }
+  .row-label { font-size: 10px; font-weight: 700; letter-spacing: 1.2px;
+    color: #444; text-transform: uppercase; padding-left: 4px; }
+  .row { display: flex; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
+
+  /* ── Node cards ── */
+  .node {
+    border-radius: 14px;
+    padding: 14px 16px;
+    cursor: pointer;
+    border: 1.5px solid transparent;
+    transition: all 0.18s ease;
+    position: relative;
+    min-width: 148px;
+    user-select: none;
+  }
+  .node:hover { transform: translateY(-2px); }
+  .node.active { transform: translateY(-2px); }
+
+  /* colour themes */
+  .node.launch   { background:#13131f; border-color:#2a2a40; }
+  .node.auth     { background:#0e1a14; border-color:#1a3d2a; }
+  .node.guest    { background:#160f0a; border-color:#3d2010; }
+  .node.tab      { background:#0d1420; border-color:#1a2d4a; }
+  .node.sub      { background:#13131f; border-color:#2a2a3a; }
+  .node.income   { background:#0e180e; border-color:#1e401e; }
+  .node.streak   { background:#1a1200; border-color:#3d2e00; }
+  .node.sync     { background:#0e0e1a; border-color:#2a2a50; }
+  .node.migrate  { background:#1a0e1a; border-color:#3d1a3d; }
+  .node.native   { background:#1a0a0a; border-color:#3d1010; }
+
+  .node.active.launch  { border-color:#5a5aff; box-shadow:0 0 20px rgba(90,90,255,0.2); }
+  .node.active.auth    { border-color:#00C47A; box-shadow:0 0 20px rgba(0,196,122,0.2); }
+  .node.active.guest   { border-color:#FF9500; box-shadow:0 0 20px rgba(255,149,0,0.2); }
+  .node.active.tab     { border-color:#0A84FF; box-shadow:0 0 20px rgba(10,132,255,0.2); }
+  .node.active.sub     { border-color:#5a5aff; box-shadow:0 0 20px rgba(90,90,255,0.15); }
+  .node.active.income  { border-color:#30d158; box-shadow:0 0 20px rgba(48,209,88,0.2); }
+  .node.active.streak  { border-color:#FFD60A; box-shadow:0 0 20px rgba(255,214,10,0.2); }
+  .node.active.sync    { border-color:#5ac8fa; box-shadow:0 0 20px rgba(90,200,250,0.2); }
+  .node.active.migrate { border-color:#BF5AF2; box-shadow:0 0 20px rgba(191,90,242,0.2); }
+  .node.active.native  { border-color:#FF453A; box-shadow:0 0 20px rgba(255,69,58,0.2); }
+
+  .node-icon { font-size: 18px; margin-bottom: 6px; }
+  .node-title { font-size: 13px; font-weight: 700; color: #f0f0f5; line-height: 1.2; }
+  .node-sub   { font-size: 11px; color: #666; margin-top: 3px; line-height: 1.4; }
+  .node-badge {
+    position: absolute; top: 10px; right: 10px;
+    background: #00C47A22; color: #00C47A;
+    font-size: 9px; font-weight: 700; border-radius: 6px; padding: 2px 6px;
+    letter-spacing: 0.5px;
+  }
+  .node-badge.new  { background:#BF5AF222; color:#BF5AF2; }
+  .node-badge.core { background:#0A84FF22; color:#0A84FF; }
+
+  /* connector arrows between rows */
+  .connector {
+    display: flex; align-items: center; gap: 8px;
+    padding-left: 20px; color: #333; font-size: 11px;
+  }
+  .connector-line { flex: 1; height: 1px; background: linear-gradient(90deg, #333, transparent); max-width: 200px; }
+  .arrow-down { text-align: center; color: #2a2a3a; font-size: 18px; padding: 0 16px; }
+
+  /* ── Detail panel ── */
+  .detail-panel {
+    position: fixed; right: 0; top: 0; bottom: 0;
+    width: 360px;
+    background: #0e0e1a;
+    border-left: 1px solid #1e1e30;
+    padding: 28px 24px;
+    overflow-y: auto;
+    transform: translateX(100%);
+    transition: transform 0.22s cubic-bezier(0.4,0,0.2,1);
+    z-index: 200;
+  }
+  .detail-panel.open { transform: translateX(0); }
+
+  .panel-close {
+    position: absolute; top: 16px; right: 16px;
+    width: 28px; height: 28px; border-radius: 50%;
+    background: #1e1e2e; border: none; color: #888;
+    font-size: 16px; cursor: pointer; display: flex;
+    align-items: center; justify-content: center;
+  }
+  .panel-close:hover { background: #2a2a3a; color: #fff; }
+
+  .panel-icon  { font-size: 32px; margin-bottom: 10px; }
+  .panel-title { font-size: 20px; font-weight: 800; color: #fff; margin-bottom: 4px; }
+  .panel-desc  { font-size: 13px; color: #888; line-height: 1.6; margin-bottom: 20px; }
+
+  .panel-section { margin-bottom: 20px; }
+  .panel-section-title {
+    font-size: 10px; font-weight: 700; letter-spacing: 1px;
+    color: #444; text-transform: uppercase; margin-bottom: 10px;
+  }
+  .flow-step {
+    display: flex; gap: 12px; margin-bottom: 10px; align-items: flex-start;
+  }
+  .step-num {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: #1e1e2e; color: #888;
+    font-size: 10px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; margin-top: 1px;
+  }
+  .step-text { font-size: 12px; color: #ccc; line-height: 1.6; }
+  .step-text strong { color: #fff; }
+
+  .pill-list { display: flex; flex-wrap: wrap; gap: 6px; }
+  .pill {
+    padding: 4px 10px; border-radius: 20px;
+    font-size: 11px; font-weight: 600;
+    background: #1e1e2e; color: #888;
+  }
+  .pill.green  { background:#00C47A18; color:#00C47A; }
+  .pill.blue   { background:#0A84FF18; color:#0A84FF; }
+  .pill.orange { background:#FF950018; color:#FF9500; }
+  .pill.red    { background:#FF453A18; color:#FF453A; }
+  .pill.yellow { background:#FFD60A18; color:#FFD60A; }
+  .pill.purple { background:#BF5AF218; color:#BF5AF2; }
+
+  .rule-box {
+    background: #13131f; border: 1px solid #2a2a3a;
+    border-radius: 10px; padding: 12px 14px;
+    font-size: 12px; color: #aaa; line-height: 1.7;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    margin-top: 8px;
+  }
+  .rule-box .hl { color: #00C47A; }
+  .rule-box .hl2 { color: #0A84FF; }
+  .rule-box .hl3 { color: #FFD60A; }
+  .rule-box .hl4 { color: #BF5AF2; }
+
+  /* overlay */
+  .overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+    z-index: 199; opacity: 0; pointer-events: none;
+    transition: opacity 0.22s;
+  }
+  .overlay.show { opacity: 1; pointer-events: all; }
+
+  /* ── Flow path lines ── */
+  .path-indicator {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 10px; color: #444; margin: -4px 0 8px 4px;
+  }
+  .path-sep { color: #2a2a3a; }
+
+  /* splash note */
+  .tap-hint {
+    text-align: center; color: #333; font-size: 12px;
+    padding: 8px; margin-bottom: 8px;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">H</div>
+  <div>
+    <h1>Haqly — Full App Flow</h1>
+    <p>Tap any node to explore the flow</p>
+  </div>
+  <div class="legend">
+    <div class="leg"><div class="leg-dot" style="background:#00C47A"></div>Auth</div>
+    <div class="leg"><div class="leg-dot" style="background:#0A84FF"></div>Core tabs</div>
+    <div class="leg"><div class="leg-dot" style="background:#FF9500"></div>Guest</div>
+    <div class="leg"><div class="leg-dot" style="background:#FFD60A"></div>New feature</div>
+    <div class="leg"><div class="leg-dot" style="background:#BF5AF2"></div>Migration</div>
+    <div class="leg"><div class="leg-dot" style="background:#FF453A"></div>Native</div>
+  </div>
+</div>
+
+<div class="canvas">
+  <p class="tap-hint">↓ Tap any card to see the full flow details</p>
+
+  <!-- ROW 1: LAUNCH -->
+  <div class="row-wrap">
+    <div class="row-label">App launch</div>
+    <div class="row">
+      <div class="node launch" onclick="show('launch')">
+        <div class="node-icon">🚀</div>
+        <div class="node-title">App Launch</div>
+        <div class="node-sub">SQLite init · session restore · prefs load</div>
+      </div>
+      <div class="node sync" onclick="show('biometric_gate')">
+        <div class="node-icon">🔒</div>
+        <div class="node-title">Biometric Gate</div>
+        <div class="node-sub">If enabled + 5min backgrounded</div>
+        <div class="node-badge new">OPT-IN</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow-down">↓</div>
+
+  <!-- ROW 2: AUTH -->
+  <div class="row-wrap">
+    <div class="row-label">Authentication</div>
+    <div class="row">
+      <div class="node auth" onclick="show('login')">
+        <div class="node-icon">✉️</div>
+        <div class="node-title">Login / Signup</div>
+        <div class="node-sub">Email · Google OAuth</div>
+        <div class="node-badge">AUTH</div>
+      </div>
+      <div class="node guest" onclick="show('guest')">
+        <div class="node-icon">👤</div>
+        <div class="node-title">Guest Mode</div>
+        <div class="node-sub">Full functionality · local only</div>
+        <div class="node-badge new">FULL</div>
+      </div>
+      <div class="node migrate" onclick="show('migrate')">
+        <div class="node-icon">☁️</div>
+        <div class="node-title">Guest → Account</div>
+        <div class="node-sub">Migrate local data to cloud</div>
+        <div class="node-badge new">MIGRATE</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow-down">↓</div>
+
+  <!-- ROW 3: TABS -->
+  <div class="row-wrap">
+    <div class="row-label">Main navigation — 6 tabs</div>
+    <div class="row">
+      <div class="node tab" onclick="show('home')">
+        <div class="node-icon">🏠</div>
+        <div class="node-title">Home</div>
+        <div class="node-sub">Dashboard · streak · insights</div>
+        <div class="node-badge core">CORE</div>
+      </div>
+      <div class="node tab" onclick="show('expense')">
+        <div class="node-icon">💸</div>
+        <div class="node-title">Expense / Income</div>
+        <div class="node-sub">Toggle · categories · log</div>
+        <div class="node-badge new">+ INCOME</div>
+      </div>
+      <div class="node tab" onclick="show('check')">
+        <div class="node-icon">✅</div>
+        <div class="node-title">Check</div>
+        <div class="node-sub">Value calculator · verdict</div>
+        <div class="node-badge core">CORE</div>
+      </div>
+      <div class="node tab" onclick="show('ledger')">
+        <div class="node-icon">📒</div>
+        <div class="node-title">Ledger</div>
+        <div class="node-sub">Lent · borrowed · split</div>
+        <div class="node-badge core">CORE</div>
+      </div>
+      <div class="node tab" onclick="show('history')">
+        <div class="node-icon">📊</div>
+        <div class="node-title">History</div>
+        <div class="node-sub">Timeline · filters · chart</div>
+        <div class="node-badge core">CORE</div>
+      </div>
+      <div class="node tab" onclick="show('more')">
+        <div class="node-icon">⚙️</div>
+        <div class="node-title">More</div>
+        <div class="node-sub">Settings · privacy · notifs</div>
+        <div class="node-badge core">CORE</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow-down">↓</div>
+
+  <!-- ROW 4: NEW FEATURES -->
+  <div class="row-wrap">
+    <div class="row-label">New features</div>
+    <div class="row">
+      <div class="node streak" onclick="show('streak')">
+        <div class="node-icon">🔥</div>
+        <div class="node-title">Streak System</div>
+        <div class="node-sub">Daily logging · consecutive days</div>
+        <div class="node-badge new">NEW</div>
+      </div>
+      <div class="node income" onclick="show('income')">
+        <div class="node-icon">💰</div>
+        <div class="node-title">Income Tracking</div>
+        <div class="node-sub">Salary · Freelance · Student · +4</div>
+        <div class="node-badge new">NEW</div>
+      </div>
+      <div class="node sub" onclick="show('balance')">
+        <div class="node-icon">⚖️</div>
+        <div class="node-title">Balance View</div>
+        <div class="node-sub">Income vs spend · what's left</div>
+        <div class="node-badge new">NEW</div>
+      </div>
+      <div class="node sub" onclick="show('quickadd')">
+        <div class="node-icon">⚡</div>
+        <div class="node-title">Quick Add Sheet</div>
+        <div class="node-sub">Bottom sheet · 2 taps to log</div>
+        <div class="node-badge new">NEW</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow-down">↓</div>
+
+  <!-- ROW 5: DATA + SYNC -->
+  <div class="row-wrap">
+    <div class="row-label">Data layer</div>
+    <div class="row">
+      <div class="node sync" onclick="show('offline')">
+        <div class="node-icon">📱</div>
+        <div class="node-title">Offline Mode</div>
+        <div class="node-sub">SQLite source of truth · always works</div>
+        <div class="node-badge new">NEW</div>
+      </div>
+      <div class="node sync" onclick="show('bgsync')">
+        <div class="node-icon">🔄</div>
+        <div class="node-title">Background Sync</div>
+        <div class="node-sub">Silent · queue drain · Supabase</div>
+        <div class="node-badge new">NEW</div>
+      </div>
+      <div class="node sync" onclick="show('syncicon')">
+        <div class="node-icon">☁️</div>
+        <div class="node-title">Sync Status Icon</div>
+        <div class="node-sub">3 states · home header only</div>
+        <div class="node-badge new">NEW</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow-down">↓</div>
+
+  <!-- ROW 6: NATIVE -->
+  <div class="row-wrap">
+    <div class="row-label">Native layer — Expo SDK only</div>
+    <div class="row">
+      <div class="node native" onclick="show('haptics')">
+        <div class="node-icon">📳</div>
+        <div class="node-title">Haptics</div>
+        <div class="node-sub">8 interaction points</div>
+      </div>
+      <div class="node native" onclick="show('biometric')">
+        <div class="node-icon">🫆</div>
+        <div class="node-title">Biometrics</div>
+        <div class="node-sub">Face ID · Fingerprint · opt-in</div>
+      </div>
+      <div class="node native" onclick="show('notifs')">
+        <div class="node-icon">🔔</div>
+        <div class="node-title">Notifications</div>
+        <div class="node-sub">3 types · all opt-in</div>
+      </div>
+      <div class="node native" onclick="show('gestures')">
+        <div class="node-icon">👆</div>
+        <div class="node-title">Gestures</div>
+        <div class="node-sub">Swipe-delete · pull-refresh · sheets</div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /canvas -->
+
+<!-- Overlay -->
+<div class="overlay" id="overlay" onclick="close()"></div>
+
+<!-- Detail Panel -->
+<div class="detail-panel" id="panel">
+  <button class="panel-close" onclick="close()">✕</button>
+  <div id="panel-content"></div>
+</div>
+
+<script>
+const DATA = {
+
+  launch: {
+    icon:'🚀', title:'App Launch', color:'#5a5aff',
+    desc:'Everything that happens before the user sees the first screen. Gets the foundation ready.',
+    flow:[
+      { t:'SQLite opens', d:'<strong>db.ts</strong> runs — creates all tables if they don\'t exist yet. First launch: empty DB. Returning user: all local data is already there.' },
+      { t:'Zustand hydrates', d:'<strong>uiStore</strong> loads theme + language from AsyncStorage. <strong>authStore</strong> restores session from Supabase AsyncStorage adapter.' },
+      { t:'Background task registers', d:'<strong>expo-background-fetch</strong> registers the sync task — fires every 15 minutes even when app is closed.' },
+      { t:'Auth check', d:'If session exists → tab layout. If no session → auth screen. No flash, no redirect loop.' },
+      { t:'Biometric check', d:'If enabled and app was backgrounded 5+ minutes → show biometric gate before tabs.' }
+    ],
+    pills:[ {t:'~200ms cold start',c:''}, {t:'SQLite',c:'blue'}, {t:'Zustand',c:'blue'}, {t:'expo-router',c:'blue'} ]
+  },
+
+  biometric_gate: {
+    icon:'🔒', title:'Biometric Gate', color:'#5ac8fa',
+    desc:'A local lock — not a re-auth. Supabase session stays alive. Just prevents someone picking up the phone from seeing your data.',
+    flow:[
+      { t:'AppState listener', d:'When app moves from <strong>background → active</strong>, check: is biometric enabled AND was it backgrounded 5+ min?' },
+      { t:'Show gate', d:'Blurred overlay covers the tab layout. Shows biometric prompt immediately.' },
+      { t:'Authenticate', d:'expo-local-authentication. Supports Face ID, Touch ID, fingerprint. Fallback to PIN/password.' },
+      { t:'3 failures', d:'Falls back to Supabase password entry. Never locks the user out completely.' },
+      { t:'Dismiss gate', d:'On success, overlay fades out. User is back in the app instantly.' }
+    ],
+    pills:[ {t:'Opt-in default OFF',c:'orange'}, {t:'expo-local-authentication',c:'blue'}, {t:'5min threshold',c:''} ]
+  },
+
+  login: {
+    icon:'✉️', title:'Login / Signup', color:'#00C47A',
+    desc:'Clean minimal auth screen. Two tabs. No forced sign-up — guest mode is always one tap away.',
+    flow:[
+      { t:'Two tabs', d:'<strong>Login</strong> tab (email + password) and <strong>Sign up</strong> tab (email + password + name). No extra fields.' },
+      { t:'Google OAuth', d:'Single button below the form. One tap, system browser, returns to app with session.' },
+      { t:'Guest button', d:'Below everything. "Continue as Guest →". No friction. Takes them straight to the app.' },
+      { t:'On success', d:'<strong>authStore.signIn()</strong> → stores session → triggers <strong>initialHydration()</strong> → pulls all Supabase data → writes to SQLite.' },
+      { t:'Session restore', d:'On app relaunch with valid session → skips this screen entirely, straight to tabs.' }
+    ],
+    pills:[ {t:'Supabase Auth',c:'green'}, {t:'Google OAuth',c:'blue'}, {t:'No forced sign-up',c:'green'} ]
+  },
+
+  guest: {
+    icon:'👤', title:'Guest Mode', color:'#FF9500',
+    desc:'Full functionality. Nothing locked. The user gets the entire app on their device. The only difference: data lives locally, not in the cloud.',
+    flow:[
+      { t:'Local UUID', d:'A guest ID is generated: <strong>guest_[timestamp]_[random]</strong>. Stored in AsyncStorage. This becomes the user_id in every SQLite row.' },
+      { t:'SQLite is everything', d:'Every expense, check, ledger entry saves to SQLite with this guest ID. Exactly the same repositories, same hooks, same UI.' },
+      { t:'No sync', d:'syncService checks for a session. No session → skips Supabase entirely. Queue builds up but never drains.' },
+      { t:'Guest banner', d:'Subtle strip at top of home screen: "You\'re in guest mode — your data is on this device only." With a "Back up my data →" button.' },
+      { t:'Full features', d:'Expense tracking, income, streak, value check, ledger, history, insights — all work 100% in guest mode.' }
+    ],
+    pills:[ {t:'Full functionality',c:'green'}, {t:'Local UUID',c:'orange'}, {t:'No sync',c:'orange'}, {t:'SQLite only',c:'blue'} ]
+  },
+
+  migrate: {
+    icon:'☁️', title:'Guest → Account Migration', color:'#BF5AF2',
+    desc:'When a guest user decides to create an account, their data follows them. Seamless. Nothing lost.',
+    flow:[
+      { t:'Trigger', d:'Guest taps "Back up my data →" banner OR goes to More → Create Account.' },
+      { t:'Account creation', d:'Standard signup form. On success, Supabase creates a real user_id (UUID).' },
+      { t:'Re-ID local data', d:'Every SQLite row with the guest_id gets its user_id updated to the real Supabase UUID.' },
+      { t:'Queue all as pending', d:'All rows get sync_status = \'pending\'. The entire local history is now queued for upload.' },
+      { t:'Initial sync', d:'triggerSync() runs — drains the full queue to Supabase. All their data is now in the cloud.' },
+      { t:'Guest banner gone', d:'authStore updates, GuestProvider clears, sync icon shows ✓. They\'re a full user now.' }
+    ],
+    pills:[ {t:'Zero data loss',c:'green'}, {t:'Bulk re-ID',c:'purple'}, {t:'Full queue drain',c:'blue'} ],
+    rule: '<span class="hl">guest_id</span> → <span class="hl2">real_uuid</span>\n<span class="hl3">sync_status</span> = "pending" for all rows\n<span class="hl4">triggerSync()</span> → Supabase upsert\nBanner dismissed → full auth user'
+  },
+
+  home: {
+    icon:'🏠', title:'Home Screen', color:'#0A84FF',
+    desc:'The dashboard. Everything the user needs at a glance. Never overwhelming — one number at a time.',
+    flow:[
+      { t:'Greeting', d:'Time-based: Good morning / afternoon / evening + first name. Below it: the streak if ≥3 days (🔥 12 days).' },
+      { t:'Insight banner', d:'One sentence generated by generateInsight(). Rule-based, rotates by priority. Never empty.' },
+      { t:'Today spend + Budget Ring', d:'Big number: today\'s total. Ring: month spend vs budget. If income logged: ring becomes income-relative.' },
+      { t:'Summary strip', d:'4 quick stats: Today · Week · Top category · Value %. Horizontal scroll on mobile.' },
+      { t:'Value Score card', d:'If check items exist: animated ring + breakdown (worth/maybe/not %). Not shown on first launch.' },
+      { t:'Quick actions grid', d:'4 cards: Add Expense · Log Income · New Check · Add Ledger. Fastest path to any core action.' },
+      { t:'Recent today', d:'Last 4 expenses from today. Tap any to edit. See all → goes to History.' },
+      { t:'Ledger summary', d:'Only shows if there are unsettled entries. "Meron owes you Br 500 · You owe Abebe Br 200".' },
+      { t:'Sync icon', d:'Top right. Hidden when synced. Grey cloud if offline. Blue pulse if syncing.' }
+    ],
+    pills:[ {t:'Single SQL read',c:'blue'}, {t:'Streak display',c:'yellow'}, {t:'Income-aware ring',c:'green'} ]
+  },
+
+  expense: {
+    icon:'💸', title:'Expense / Income Screen', color:'#0A84FF',
+    desc:'One screen, two modes. Toggle at the top switches between logging an expense or logging income.',
+    flow:[
+      { t:'Toggle: Expense ↔ Income', d:'Top of screen. Switches form context. Category grid changes. Amount label changes.' },
+      { t:'Expense mode', d:'Name, amount (Br prefix, numeric keyboard), category grid. Last category auto-selected. One-tap save.' },
+      { t:'Income mode', d:'Source name, amount, income category grid: <strong>Salary · Freelance · Business · Investment · Bonus · Student · Other</strong>.' },
+      { t:'Student category', d:'No elaboration needed in UI. The word is enough. Covers allowance, scholarship, family support — user knows what it means for them.' },
+      { t:'Save flow', d:'ExpenseRepository.save() → SQLite instant → queueWrite() → UI updates → haptic success.' },
+      { t:'Today list', d:'Below the form: today\'s entries (both expenses and income). Income items show with green + prefix.' },
+      { t:'Quick Add Sheet', d:'FAB button → bottom sheet alternative. Snap 45% → 90%. Keyboard-aware. 2 taps max.' }
+    ],
+    pills:[ {t:'Toggle UX',c:'blue'}, {t:'Student income',c:'green'}, {t:'Offline-safe',c:'green'}, {t:'Haptic save',c:'red'} ]
+  },
+
+  check: {
+    icon:'✅', title:'Check — Value Calculator', color:'#0A84FF',
+    desc:"Haqly's core differentiator. Not tracking what you spent — judging if it was worth it before you spend.",
+    flow:[
+      { t:'Form', d:'Item name · Price (Br) · How many times will you use it? Three inputs. That\'s it.' },
+      { t:'Live calculation', d:'As user types, cost per use updates in real time. No submit button needed for preview.' },
+      { t:'Verdict reveal', d:'Worth it / Think about it / Skip it. Color coded green/orange/red. Regret score 1–5 stars.' },
+      { t:'Rule', d:'Under Br 1/use → Worth. Br 1–5/use → Maybe. Over Br 5/use → Not. (calcCheck() from utils.ts)' },
+      { t:'Save', d:'CheckRepository.save() → SQLite → haptic (success for worth, error for not) → feeds Value Score.' },
+      { t:'Examples', d:'4 preset examples below the form. Shows the concept with familiar items. Great for new users.' }
+    ],
+    pills:[ {t:'core differentiator',c:'green'}, {t:'Live preview',c:'blue'}, {t:'Verdict haptic',c:'red'} ],
+    rule: 'cost = <span class="hl">price</span> ÷ <span class="hl2">uses</span>\n< 1  → <span class="hl">worth</span>  → regret 1–2\n1–5  → <span class="hl3">maybe</span>  → regret 3\n> 5  → <span class="hl4">not</span>    → regret 4–5'
+  },
+
+  ledger: {
+    icon:'📒', title:'Ledger', color:'#0A84FF',
+    desc:'Social money layer. Who owes you, who you owe. Clean and unambiguous.',
+    flow:[
+      { t:'Three tabs', d:'Entries · Add · Split. Bottom tab strip inside the screen.' },
+      { t:'Entries tab', d:'Filter: All / Lent / Borrowed / Unsettled. Each row: person avatar (initials, deterministic color), amount, type, note, settle toggle.' },
+      { t:'Add tab', d:'Person name (ContactPicker autocomplete) · Amount · ETB/USD toggle · Lent/Borrowed toggle · Note (optional) · Calculator.' },
+      { t:'Split tab', d:'Total amount · list of people · calculates equal share · saves as multiple lent entries at once.' },
+      { t:'Settle', d:'Tap settle toggle → LedgerRepository.settle(id) → haptic success → moves out of unsettled filter → disappears from home summary.' },
+      { t:'Contacts', d:'Person names auto-save to contacts. Next time you type a name, it autocompletes. Phone optional.' }
+    ],
+    pills:[ {t:'ETB + USD',c:'green'}, {t:'Split bill',c:'blue'}, {t:'Contact link',c:''} ]
+  },
+
+  history: {
+    icon:'📊', title:'History', color:'#0A84FF',
+    desc:'Full timeline. Both expenses and income. Paginated, filterable, with a weekly chart up top.',
+    flow:[
+      { t:'Weekly chart', d:'7-day bar chart. Expenses in accent green, income in blue. Built with react-native-svg.' },
+      { t:'Filter chips', d:'All · Expenses · Income · then each category. Horizontal scroll. Active chip is accent color.' },
+      { t:'Grouped list', d:'Grouped by date. dayLabel() for Today/Yesterday, then full date. Daily total shown per group.' },
+      { t:'Each row', d:'Category emoji · name · amount (red for expense, green for income) · time. Swipe right to delete.' },
+      { t:'Pagination', d:'20 rows per page. Load more on scroll. No loading spinner — SQLite is instant.' },
+      { t:'Pull to refresh', d:'Triggers pullRemoteChanges() → checks Supabase for newer rows → updates SQLite if any.' }
+    ],
+    pills:[ {t:'Expense + Income',c:'green'}, {t:'Paginated',c:'blue'}, {t:'Weekly chart',c:''} ]
+  },
+
+  more: {
+    icon:'⚙️', title:'More — Settings', color:'#0A84FF',
+    desc:'Clean settings screen. Organized into sections. No clutter.',
+    flow:[
+      { t:'Profile', d:'Name + email. Read-only display. Sign out button at bottom.' },
+      { t:'Budget', d:'Monthly + weekly budget inputs. If income logged: option to use income as budget ceiling instead.' },
+      { t:'Categories', d:'View/add/remove expense categories. Synced to user_categories table in Supabase.' },
+      { t:'Contacts', d:'Full contact list. Add/edit/delete. Used for ledger person autocomplete.' },
+      { t:'Appearance', d:'Theme toggle (Light/Dark). Language toggle (English/Amharic). Both instant, no restart.' },
+      { t:'Privacy', d:'Biometric toggle. If hardware not present, section is hidden.' },
+      { t:'Notifications', d:'Three toggles: Daily nudge (time picker) · Budget alert · Ledger reminder.' },
+      { t:'Stats', d:'Read-only: total expenses logged · total income logged · all-time value score · current streak.' },
+      { t:'Guest CTA', d:'If guest: prominent "Back up your data" card at top of More screen.' }
+    ],
+    pills:[ {t:'Budget vs Income',c:'green'}, {t:'Biometric opt-in',c:'red'}, {t:'Amharic',c:''} ]
+  },
+
+  streak: {
+    icon:'🔥', title:'Streak System', color:'#FFD60A',
+    desc:'Daily logging habit tracker. The most powerful engagement mechanic Haqly can add with zero UX cost.',
+    flow:[
+      { t:'Definition', d:'A streak day = any day with at least one expense OR income logged. The action that matters is opening the app and recording something.' },
+      { t:'Calculation', d:'On home screen load: query SQLite for distinct calendar days in expenses + income. Walk backwards from today. Count consecutive days without a gap. Today counts even if no log yet (streak isn\'t broken until the day ends).' },
+      { t:'Display rule', d:'Streak only shows if ≥ 3 days. Below the greeting. Small and quiet: 🔥 12 days. Not a big card, not a badge. Just a number.' },
+      { t:'Reset', d:'If yesterday has no entries AND today has no entries → streak resets to 0. A single missed day breaks it.' },
+      { t:'Psychology', d:'Once a user hits day 7 or day 14, they will open the app just to preserve the number. This is the mechanic that turns weekly users into daily users.' },
+      { t:'Future', d:'Down the line: streak milestones (7, 30, 100 days) can trigger a quiet celebration + update the Stats section in More.' }
+    ],
+    pills:[ {t:'Shows at ≥3 days',c:'yellow'}, {t:'SQLite distinct days',c:'blue'}, {t:'Quiet display',c:''} ],
+    rule: 'SELECT DISTINCT date(<span class="hl">created_at</span>)\nFROM <span class="hl2">expenses</span> + <span class="hl2">income</span>\nWHERE <span class="hl3">user_id</span> = ?\nORDER BY date DESC\n→ count consecutive from today'
+  },
+
+  income: {
+    icon:'💰', title:'Income Tracking', color:'#30d158',
+    desc:'Adds the other side of the financial picture. Now Haqly knows what came in, not just what went out.',
+    flow:[
+      { t:'Same form, toggled', d:'The Expense screen gets a toggle at the top: Expense ↔ Income. No new screen. Same amount input, same save flow.' },
+      { t:'Income categories', d:'<strong>Salary</strong> (regular employment) · <strong>Freelance</strong> (project-based work) · <strong>Business</strong> (own business) · <strong>Investment</strong> (returns, dividends) · <strong>Bonus</strong> (one-time extra) · <strong>Student</strong> (allowance, scholarship, family support) · <strong>Other</strong>.' },
+      { t:'Student category', d:'Covers everything a student\'s income actually is: family allowance, government scholarship, part-time work they don\'t classify as freelance. The word alone is self-explanatory.' },
+      { t:'Storage', d:'Income rows go into the same <strong>expenses</strong> table with a type column: \'expense\' or \'income\'. No new table. Amount is always positive; type determines direction.' },
+      { t:'Balance', d:'Monthly balance = sum of income - sum of expenses for the month. Shown on home screen when at least one income entry exists.' },
+      { t:'Budget ring', d:'If budget is manually set: ring uses budget. If income is logged: user can toggle ring to show income-relative spending.' },
+      { t:'Insight engine update', d:'generateInsight() gets access to income total. New rule: if spending > 75% of income → surface the ratio.' }
+    ],
+    pills:[ {t:'Same table',c:'blue'}, {t:'Student category',c:'green'}, {t:'type: income|expense',c:''} ],
+    rule: 'expenses table\n+ type TEXT DEFAULT <span class="hl">\'expense\'</span>\n  CHECK(type IN (<span class="hl">\'expense\'</span>, <span class="hl2">\'income\'</span>))\n\n<span class="hl3">balance</span> = SUM(income) - SUM(expense)\n<span class="hl4">ring mode</span>: budget OR income ceiling'
+  },
+
+  balance: {
+    icon:'⚖️', title:'Balance View', color:'#5a5aff',
+    desc:"Shows the full financial picture once income is tracked. Makes Haqly's budget ring honest.",
+    flow:[
+      { t:'Shows when', d:'Balance section appears on home screen only once the user has logged at least one income entry. Before that, home shows spend-only view (current behaviour).' },
+      { t:'Numbers', d:'Earned this month: Br X · Spent this month: Br Y · Remaining: Br Z. Clean, three-line layout.' },
+      { t:'Ring mode toggle', d:'Small toggle near budget ring: "Budget" vs "Income". Switches ring reference point.' },
+      { t:'History context', d:'In History, income rows show with green + prefix. Daily group totals reflect net (income - expense) for that day.' },
+      { t:'Student context', d:'A student with Br 3,000 monthly allowance and Br 2,400 spend sees "80% of income spent" — much more meaningful than tracking against an arbitrary budget number they don\'t have.' }
+    ],
+    pills:[ {t:'Conditional show',c:'orange'}, {t:'Income-relative ring',c:'green'}, {t:'Student context',c:'green'} ]
+  },
+
+  quickadd: {
+    icon:'⚡', title:'Quick Add Sheet', color:'#5a5aff',
+    desc:'Fastest path to logging. 2 taps max. Bottom sheet, keyboard-aware.',
+    flow:[
+      { t:'Trigger', d:'FAB button on Home and Expense screens. Also available from Quick Actions grid on home.' },
+      { t:'Snap points', d:'Bottom sheet at 45% → 90% on keyboard open. Keyboard pushes sheet up automatically.' },
+      { t:'Form', d:'Amount first (big input, numeric keyboard auto-opens) · then category chips · then name. Optimized for speed over completeness.' },
+      { t:'Default', d:'Defaults to Expense mode. Can toggle to Income. Last-used category pre-selected.' },
+      { t:'Save', d:'Single button. Haptic success. Sheet closes. Home screen updates instantly.' },
+      { t:'Why it matters', d:'The most common drop-off in finance apps is "I\'ll log it later." Quick Add removes that friction entirely.' }
+    ],
+    pills:[ {t:'@gorhom/bottom-sheet',c:'blue'}, {t:'2 taps',c:'green'}, {t:'Keyboard-aware',c:''} ]
+  },
+
+  offline: {
+    icon:'📱', title:'Offline Mode', color:'#5ac8fa',
+    desc:'The app works identically offline and online. The user should never know the difference.',
+    flow:[
+      { t:'SQLite = source of truth', d:'All reads come from SQLite, always. Online status has zero impact on what the user sees.' },
+      { t:'All writes local-first', d:'Every save goes to SQLite immediately. Then queued for sync. Never "waiting for network" on a write.' },
+      { t:'Full feature set offline', d:'Every feature — expense, income, check, ledger, streak, history — works fully offline. Nothing is gated.' },
+      { t:'Queue builds up', d:'While offline, offline_queue fills with pending rows. Rows are stamped with client_updated_at.' },
+      { t:'Reconnect', d:'NetInfo fires connected event → syncStore.triggerSync() → queue drains to Supabase silently.' },
+      { t:'For the Ethiopian market', d:'Mobile data is inconsistent. An app that requires connectivity for basic functions will be abandoned. Offline-first is not optional here.' }
+    ],
+    pills:[ {t:'Always works',c:'green'}, {t:'No connectivity gate',c:'green'}, {t:'Ethiopian market',c:'orange'} ]
+  },
+
+  bgsync: {
+    icon:'🔄', title:'Background Sync', color:'#5ac8fa',
+    desc:'Data syncs silently. Always. Even when the app is closed. The user never manages sync manually.',
+    flow:[
+      { t:'Trigger 1: Foreground', d:'AppState changes active → triggerSync(). User opens app, any queued data syncs immediately.' },
+      { t:'Trigger 2: Reconnect', d:'NetInfo fires isConnected=true → triggerSync(). Reconnect from offline, sync fires instantly.' },
+      { t:'Trigger 3: Background fetch', d:'expo-background-fetch fires every 15 minutes. OS-managed. Continues when app is closed (Android) or in recent apps (iOS with background modes enabled).' },
+      { t:'Trigger 4: Pull to refresh', d:'User pulls down on any data screen → triggers pullRemoteChanges() + sync. Manual escape hatch.' },
+      { t:'Queue drain order', d:'Oldest first (ORDER BY created_at ASC). Ensures chronological consistency in Supabase.' },
+      { t:'Conflict resolution', d:'Upsert with onConflict: \'id\'. client_updated_at determines winner. Last write wins. Correct for single-user personal finance.' },
+      { t:'On failure', d:'Failed items get sync_status=\'failed\'. They retry on next trigger. No data is ever lost.' }
+    ],
+    pills:[ {t:'4 trigger points',c:'blue'}, {t:'Last-write-wins',c:''}, {t:'Never loses data',c:'green'} ],
+    rule: 'Triggers:\n<span class="hl">AppState</span> background → active\n<span class="hl2">NetInfo</span> isConnected = true\n<span class="hl3">BackgroundFetch</span> every 15min\n<span class="hl4">Pull-to-refresh</span> manual\n\nStrategy: oldest-first, upsert, LWW'
+  },
+
+  syncicon: {
+    icon:'☁️', title:'Sync Status Icon', color:'#5ac8fa',
+    desc:'The only visible sync feedback. Lives in the home header. Disappears when everything is fine.',
+    flow:[
+      { t:'idle (synced)', d:'Nothing shown. Clean header. This is the most common state.' },
+      { t:'offline', d:'Grey cloud with small ✕ badge. Quiet. Doesn\'t interrupt anything.' },
+      { t:'syncing', d:'Blue cloud with animated pulse. Shows sync is actively running.' },
+      { t:'error', d:'Amber cloud with ! badge. Tap → sheet shows pending count + "Retry" button.' },
+      { t:'Why only home', d:'Showing the sync icon on every screen creates anxiety. Home is the natural place to check status. Other screens don\'t need to know.' },
+      { t:'No toasts', d:'No "Synced!" toast on success. No modal on failure. The icon state is enough. This matches Apple\'s own approach in Notes and Reminders.' }
+    ],
+    pills:[ {t:'Home only',c:'blue'}, {t:'No toast spam',c:'green'}, {t:'Tap to retry',c:'orange'} ]
+  },
+
+  haptics: {
+    icon:'📳', title:'Haptic Feedback', color:'#FF453A',
+    desc:'The single highest ROI native feature. One afternoon of work, immediate quality jump.',
+    flow:[
+      { t:'Expense saved', d:'<strong>success()</strong> — double-pulse. Strong positive confirmation.' },
+      { t:'Category selected', d:'<strong>light()</strong> — soft acknowledgement. Feels responsive.' },
+      { t:'Verdict: Worth it', d:'<strong>success()</strong> — celebratory.' },
+      { t:'Verdict: Skip it', d:'<strong>error()</strong> — gentle warning. Not punishing, just notable.' },
+      { t:'Swipe-to-delete confirm', d:'<strong>medium()</strong> — deliberate, matches the weight of the action.' },
+      { t:'Budget 80%', d:'<strong>warning()</strong> — single pulse alert.' },
+      { t:'Budget 100%', d:'<strong>error()</strong> — stronger. Designed to be felt.' },
+      { t:'Bottom sheet opens', d:'<strong>light()</strong> — subtle acknowledgement of UI change.' }
+    ],
+    pills:[ {t:'expo-haptics',c:'red'}, {t:'useHaptics() hook',c:''}, {t:'Never direct import',c:'orange'} ]
+  },
+
+  biometric: {
+    icon:'🫆', title:'Biometrics', color:'#FF453A',
+    desc:'A trust signal. Opt-in. Gracefully degrades if hardware is absent.',
+    flow:[
+      { t:'Setting', d:'More → Privacy → "Require biometrics to open" (toggle, default OFF).' },
+      { t:'Enable flow', d:'Tap toggle → immediate biometric prompt → if success → saved to AsyncStorage → enabled.' },
+      { t:'Gate trigger', d:'AppState: background → active AND last foreground was 5+ minutes ago.' },
+      { t:'Hardware check', d:'If device has no biometric hardware → setting never appears. No broken UI.' },
+      { t:'Failure path', d:'3 failed attempts → falls back to Supabase password. User never gets permanently locked out.' },
+      { t:'Local lock only', d:'Supabase session stays alive. This is a screen-level lock, not a re-auth. Dismiss takes milliseconds.' }
+    ],
+    pills:[ {t:'Opt-in',c:'orange'}, {t:'expo-local-authentication',c:'red'}, {t:'Local lock only',c:''} ]
+  },
+
+  notifs: {
+    icon:'🔔', title:'Push Notifications', color:'#FF453A',
+    desc:'Three types. All opt-in. No dark patterns. No engagement spam.',
+    flow:[
+      { t:'Daily nudge', d:'Default OFF. User sets time (default 9pm). "How did today go? Tap to log." Repeating daily. One tap opens Quick Add Sheet.' },
+      { t:'Budget alert', d:'Default ON if budget is set. Fires at 80% and 100% of monthly budget. Once per threshold per month. Not repeated.' },
+      { t:'Ledger reminder', d:'Default OFF. Fires every Monday 10am if there are unsettled entries older than 7 days. "Meron still owes you Br 500 — settled yet?" Tapping opens ledger filtered to that person.' },
+      { t:'Permissions', d:'Requested once, after user has seen value in the app (after first expense logged). Not on first launch.' },
+      { t:'Device token', d:'Saved to device_tokens table in Supabase for potential future server-triggered notifications.' }
+    ],
+    pills:[ {t:'3 types only',c:'red'}, {t:'All opt-in',c:'green'}, {t:'expo-notifications',c:''} ]
+  },
+
+  gestures: {
+    icon:'👆', title:'Gestures', color:'#FF453A',
+    desc:'Touch-native interactions that replace hover states and right-click menus from web.',
+    flow:[
+      { t:'Swipe-to-delete', d:'Expense rows and ledger rows. Right swipe reveals red delete action. Haptic on reveal (medium) and confirm (medium). GestureHandler + Reanimated.' },
+      { t:'Pull-to-refresh', d:'On History, Home, Ledger. Triggers pullRemoteChanges() + sync. Standard RefreshControl.' },
+      { t:'Bottom sheet drag', d:'Quick Add Sheet and Confirm Sheet. @gorhom/bottom-sheet. Snap points at 45% and 90%.' },
+      { t:'Card press spring', d:'All tappable cards: withSpring scale 0.97 → 1.0. Replaces web CSS active:scale.' },
+      { t:'Category tap spring', d:'withSequence: 0.94 → 1.0. Slightly more expressive than card press. Plus light haptic.' }
+    ],
+    pills:[ {t:'GestureHandler',c:'red'}, {t:'Reanimated 3',c:'red'}, {t:'@gorhom/bottom-sheet',c:''} ]
+  }
+
+}
+
+let currentNode = null
+
+function show(id) {
+  const d = DATA[id]
+  if (!d) return
+  currentNode = id
+  document.querySelectorAll('.node').forEach(n => n.classList.remove('active'))
+  document.querySelectorAll('.node').forEach(n => {
+    if (n.getAttribute('onclick') === `show('${id}')`) n.classList.add('active')
+  })
+  const html = `
+    <div class="panel-icon">${d.icon}</div>
+    <div class="panel-title">${d.title}</div>
+    <div class="panel-desc">${d.desc}</div>
+
+    <div class="panel-section">
+      <div class="panel-section-title">Full Flow</div>
+      ${d.flow.map((s,i) => `
+        <div class="flow-step">
+          <div class="step-num">${i+1}</div>
+          <div class="step-text"><strong>${s.t}</strong> — ${s.d}</div>
+        </div>
+      `).join('')}
+    </div>
+
+    ${d.rule ? `
+    <div class="panel-section">
+      <div class="panel-section-title">Logic</div>
+      <div class="rule-box">${d.rule}</div>
+    </div>` : ''}
+
+    ${d.pills && d.pills.length ? `
+    <div class="panel-section">
+      <div class="panel-section-title">Key facts</div>
+      <div class="pill-list">
+        ${d.pills.map(p => `<div class="pill ${p.c}">${p.t}</div>`).join('')}
+      </div>
+    </div>` : ''}
+  `
+  document.getElementById('panel-content').innerHTML = html
+  document.getElementById('panel').classList.add('open')
+  document.getElementById('overlay').classList.add('show')
+}
+
+function close() {
+  document.getElementById('panel').classList.remove('open')
+  document.getElementById('overlay').classList.remove('show')
+  document.querySelectorAll('.node').forEach(n => n.classList.remove('active'))
+  currentNode = null
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') close() })
+</script>
+</body>
+</html>

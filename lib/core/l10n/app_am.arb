@@ -1,0 +1,15 @@
+{
+  "@@locale": "am",
+  "appName": "ሀቅሊ",
+  "appTagline": "ምን ያህል አወጡ ብቻ ሳይሆን፥ ዋጋ ነበረው ወይ?",
+  "tabHome": "መነሻ",
+  "tabAdd": "መዝግብ",
+  "tabCheck": "ፈትሽ",
+  "tabLedger": "ብድርና እዳ",
+  "tabHistory": "ታሪክ",
+  "save": "አስቀምጥ",
+  "cancel": "ሰርዝ",
+  "delete": "አጥፋ",
+  "confirm": "አረጋግጥ",
+  "edit": "አስተካክል"
+}

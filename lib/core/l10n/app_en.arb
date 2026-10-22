@@ -1,0 +1,51 @@
+{
+  "@@locale": "en",
+  "appName": "Haqly",
+  "@appName": {
+    "description": "Application title"
+  },
+  "appTagline": "Not just what did you spend, but was it worth it.",
+  "@appTagline": {
+    "description": "App motto"
+  },
+  "tabHome": "Home",
+  "@tabHome": {
+    "description": "Home tab title"
+  },
+  "tabAdd": "Add",
+  "@tabAdd": {
+    "description": "Add expense/income tab title"
+  },
+  "tabCheck": "Check",
+  "@tabCheck": {
+    "description": "Value check pre-purchase tab title"
+  },
+  "tabLedger": "Ledger",
+  "@tabLedger": {
+    "description": "Lent/borrowed ledger tab title"
+  },
+  "tabHistory": "History",
+  "@tabHistory": {
+    "description": "Transaction history tab title"
+  },
+  "save": "Save",
+  "@save": {
+    "description": "Save action"
+  },
+  "cancel": "Cancel",
+  "@cancel": {
+    "description": "Cancel action"
+  },
+  "delete": "Delete",
+  "@delete": {
+    "description": "Delete action"
+  },
+  "confirm": "Confirm",
+  "@confirm": {
+    "description": "Confirm action"
+  },
+  "edit": "Edit",
+  "@edit": {
+    "description": "Edit action"
+  }
+}

@@ -1,0 +1,51 @@
+name: Haqly CI
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Check code formatting
+        run: dart format --output=none --set-exit-if-changed .
+
+      - name: Run static analysis
+        run: flutter analyze
+
+      - name: Verify architectural layers & lint rules
+        run: dart run tool/check_layers.dart
+
+      - name: Secret scan (Ensure no real env files or keys committed)
+        run: |
+          if ls env/*.json 1> /dev/null 2>&1; then
+            for f in env/*.json; do
+              if [ "$f" != "env/dev.example.json" ]; then
+                echo "ERROR: Forbidden real environment file committed: $f"
+                exit 1
+              fi
+            done
+          fi
+          if [ -f android/key.properties ]; then
+            echo "ERROR: android/key.properties committed"
+            exit 1
+          fi
+
+      - name: Run unit & widget tests
+        run: flutter test

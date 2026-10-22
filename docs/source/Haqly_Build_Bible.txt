@@ -1,0 +1,1583 @@
+HAQLY MOBILE — BUILD BIBLE
+============================================================
+This document is the single source of truth for building
+the Haqly mobile app. Written from the perspective of the
+existing web app codebase. Every decision is final.
+Every piece has a reason.
+============================================================
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PART 1 — WHAT HAQLY IS
+(extracted from web app — this is the product foundation)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Haqly is a personal finance app for the Ethiopian market.
+Currency is ETB — Ethiopian Birr, formatted as "Br 1,250.00".
+The product thesis: not just what did you spend, but was it worth it.
+
+Six features. Nothing else.
+
+  1. EXPENSE TRACKING
+     Log name + amount + category.
+     Tracked across: today / this week / this month.
+     Compared against an optional budget.
+     Categories: Meals, Transport, Extras, Bills, Health, Other.
+     User can add/remove custom categories.
+
+  2. VALUE CHECK (The "Check" feature)
+     Pre-purchase calculator.
+     Formula: cost per use = price ÷ number of uses.
+     Output: verdict (worth / maybe / not) + regret score (1–5).
+     Thresholds:
+       Under Br 1 per use  → worth  → regret 1–2
+       Br 1–5 per use      → maybe  → regret 3
+       Over Br 5 per use   → not    → regret 4–5
+     Every check is saved to history.
+
+  3. VALUE SCORE
+     Aggregate score across all saved checks.
+     Formula: score = ((worth_count × 100) + (maybe_count × 50)) / total
+     Range: 0–100.
+     Labels:
+       75–100 → Smart spender
+       50–74  → On track
+       25–49  → Needs attention
+       0–24   → Review spending
+
+  4. LEDGER
+     Tracks money lent and borrowed.
+     Supports ETB and USD.
+     Fields: person, amount, currency, type (lent/borrowed), note, settled.
+     Links to contacts.
+     Includes a bill-splitting calculator.
+     Open unsettled entries surface on the home screen.
+
+  5. HISTORY
+     Full timeline of expenses.
+     Grouped by date with day labels (Today, Yesterday, then date).
+     Filterable by category.
+     Weekly bar chart showing 7-day spend pattern.
+     Edit and delete inline.
+
+  6. INSIGHTS
+     Rule-based text insight generated from expenses + verdicts.
+     Logic priority (from lib/utils.ts — generateInsight()):
+       If 50%+ of verdicts are "not"     → warn about purchase quality
+       If 80%+ of verdicts are "worth"   → reinforce smart spending
+       If one category > 50% of spend    → surface the dominant category
+       If nothing logged today           → nudge to log
+       If 10+ expenses total             → "patterns are emerging"
+       Default                           → consistency nudge
+
+BUSINESS LOGIC RULES — EXACT (from web app lib/utils.ts)
+----------------------------------------------------------
+These are not approximations. These are the exact rules in production.
+
+  br(n)
+    Formats as "Br " + toLocaleString('en', { minimumFractionDigits: 2 })
+    Handles string input via parseFloat.
+    Returns "Br 0.00" for non-finite values.
+
+  calcCheck(price, uses)
+    costPerUse = price / uses
+    verdict:
+      costPerUse < 1    → 'worth'
+      costPerUse <= 5   → 'maybe'
+      costPerUse > 5    → 'not'
+    regret:
+      costPerUse < 1    → 1
+      costPerUse <= 3   → 2
+      costPerUse <= 5   → 3
+      costPerUse <= 10  → 4
+      costPerUse > 10   → 5
+
+  calcValueScore(verdicts[])
+    worthPct = round((worth_count / total) * 100)
+    maybePct = round((maybe_count / total) * 100)
+    notPct   = round((not_count   / total) * 100)
+    score    = round(((worth_count * 100) + (maybe_count * 50)) / total)
+
+  greeting()
+    hour < 12   → 'Good morning'
+    hour < 18   → 'Good afternoon'
+    else        → 'Good evening'
+
+  dayLabel(iso)
+    Compares in local timezone (not UTC).
+    Today     → 'Today'
+    Yesterday → 'Yesterday'
+    Else      → toLocaleDateString('en', { weekday:'long', month:'short', day:'numeric' })
+
+DEFAULT CATEGORIES (exact, in order)
+  ['Meals', 'Transport', 'Extras', 'Bills', 'Health', 'Other']
+
+CATEGORY EMOJI MAP (exact)
+  Meals     → 🍽️
+  Transport → 🚗
+  Extras    → ✨
+  Bills     → 📋
+  Health    → 💊
+  Other     → 📦
+  fallback  → 📦
+
+LANGUAGE SUPPORT
+  English (en) — default
+  Amharic (am) — full string coverage
+  Stored in: AsyncStorage key 'haqly_lang'
+
+THEME
+  Light / Dark
+  Stored in: AsyncStorage key 'haqly_theme'
+  Applied via NativeWind colorScheme
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PART 2 — TECH STACK (final, no alternatives listed)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  React Native          0.76+  (New Architecture enabled)
+  Expo                  ~52    (managed workflow)
+  expo-router           ~4     (file-based navigation)
+  NativeWind            ~4     (Tailwind for React Native)
+  Reanimated            ~3     (animations)
+  Gesture Handler       ~2     (swipe, pan)
+  expo-sqlite                  (local database — offline source of truth)
+  AsyncStorage                 (preferences, non-sensitive)
+  expo-secure-store            (tokens, sensitive data)
+  Zustand               ~5     (global state — auth, sync, ui)
+  Supabase JS           ~2     (remote database — same project as web)
+  @gorhom/bottom-sheet  ~5     (sheets — quick add, confirmations)
+  react-native-svg             (charts — port from web SVG)
+  expo-haptics                 (haptic feedback)
+  expo-local-authentication    (biometrics)
+  expo-notifications           (push — 3 types only)
+  expo-background-fetch        (background sync task)
+  expo-task-manager            (task registration)
+  NetInfo                      (connectivity detection)
+
+  Build / Deploy
+    EAS Build          (Expo Application Services)
+    EAS Submit         (App Store + Play Store)
+    TestFlight         (iOS internal testing)
+    Internal track     (Android internal testing)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PART 3 — FULL PROJECT TOPOGRAPHY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+haqly-mobile/
+│
+├── app.json                         Expo config (name, slug, icons, permissions)
+├── babel.config.js                  NativeWind + Reanimated plugins
+├── tailwind.config.js               NativeWind theme (mirrors web tokens)
+├── tsconfig.json                    paths alias: @/* → ./src/*
+├── package.json
+│
+├── assets/
+│   ├── icon.png                     App icon (1024×1024)
+│   ├── splash.png                   Splash screen
+│   └── adaptive-icon.png            Android adaptive icon
+│
+├── app/                             expo-router — screens only, no logic
+│   │
+│   ├── _layout.tsx                  ROOT LAYOUT
+│   │                                  - GestureHandlerRootView (must wrap everything)
+│   │                                  - SafeAreaProvider
+│   │                                  - BottomSheetModalProvider
+│   │                                  - Initializes: SQLite, AsyncStorage prefs,
+│   │                                    Zustand hydration, background task
+│   │                                  - Registers background sync task
+│   │
+│   ├── (auth)/
+│   │   ├── _layout.tsx              Redirects to (app) if session exists
+│   │   └── index.tsx                Login + signup + guest entry
+│   │                                  - Email/password tabs
+│   │                                  - Google OAuth button
+│   │                                  - "Try as Guest" → signInGuest()
+│   │                                  - Logo, tagline, clean minimal layout
+│   │
+│   └── (app)/
+│       ├── _layout.tsx              TAB LAYOUT
+│       │                              - Auth guard: no session → (auth)
+│       │                              - Biometric gate: if enabled + foregrounded
+│       │                              - Tab bar: 6 tabs
+│       │                              - Tab bar matches web nav exactly:
+│       │                                Home, Expense, Check, Ledger, History, More
+│       │                              - SyncIcon in Home tab header only
+│       │
+│       ├── index.tsx                HOME SCREEN
+│       │                              Data: useHomeData() → single SQLite query
+│       │                              Renders:
+│       │                                Greeting + username
+│       │                                InsightBanner (text from generateInsight)
+│       │                                Today's spend + BudgetRing
+│       │                                SummaryStrip (day/week/top category/value%)
+│       │                                ValueScoreCard (if checks exist)
+│       │                                Quick actions grid (4 cards)
+│       │                                Recent today (4 items max)
+│       │                                Ledger summary (if open entries exist)
+│       │                              FAB: QuickAddSheet trigger
+│       │
+│       ├── expense.tsx              EXPENSE SCREEN
+│       │                              Data: useExpenses() → today's list from SQLite
+│       │                              Form: name, amount (Br prefix), category grid
+│       │                              Category persists last selection (AsyncStorage)
+│       │                              Save → ExpenseRepository.save() → queue sync
+│       │                              List: today's expenses, swipe-to-delete
+│       │                              FAB: QuickAddSheet trigger
+│       │
+│       ├── check.tsx                CHECK SCREEN
+│       │                              Data: useCheckItems() → history from SQLite
+│       │                              Form: item name, price, number of uses
+│       │                              Live result: cost per use, verdict, regret emoji
+│       │                              Save → CheckRepository.save() → queue sync
+│       │                              Examples section (4 preset examples)
+│       │                              Verdict scale reference (3 rows)
+│       │
+│       ├── ledger.tsx               LEDGER SCREEN
+│       │                              Data: useLedger() → entries from SQLite
+│       │                              Tabs: Entries / Add / Split
+│       │                              Entries tab:
+│       │                                Filter: all / lent / borrowed / unsettled
+│       │                                Person initials avatar (deterministic color)
+│       │                                Settle toggle → LedgerRepository.update()
+│       │                                Swipe-to-delete
+│       │                              Add tab:
+│       │                                Person (with ContactPicker)
+│       │                                Amount + currency toggle (ETB/USD)
+│       │                                Type toggle (lent/borrowed)
+│       │                                Note (optional)
+│       │                                Built-in calculator (+ / -)
+│       │                              Split tab:
+│       │                                Total amount, list of people
+│       │                                Calculates equal share per person
+│       │                                Save as multiple lent entries
+│       │
+│       ├── history.tsx              HISTORY SCREEN
+│       │                              Data: useHistory() → paginated from SQLite
+│       │                              WeeklyChart (7-day bar chart, react-native-svg)
+│       │                              Filter chips: All + each category
+│       │                              List grouped by date with dayLabel()
+│       │                              Pagination: 20 per page, load more on scroll
+│       │                              Swipe-to-delete inline
+│       │
+│       └── more.tsx                 SETTINGS SCREEN
+│                                      Sections:
+│                                        Profile (name, email — read only)
+│                                        Budget (monthly + weekly, saved to DB)
+│                                        Categories (add/remove, synced to DB)
+│                                        Contacts (add/edit/delete)
+│                                        Appearance (theme toggle)
+│                                        Language (EN / AM)
+│                                        Privacy (biometric toggle)
+│                                        Notifications (3 toggles)
+│                                        Stats (total spend, expense count, value score)
+│                                        Sign out
+│
+│
+├── src/                             all non-screen code lives here
+│   │
+│   ├── core/                        SHARED WITH WEB — pure TypeScript, no RN imports
+│   │   ├── utils.ts                 exact copy of web lib/utils.ts (zero changes)
+│   │   ├── types.ts                 Expense, CheckItem, LedgerEntry, Budget,
+│   │   │                            Contact, Verdict, ValueScore, CheckResult
+│   │   ├── constants.ts             DEFAULT_CATEGORIES, CAT_EMOJI, STORAGE_KEYS
+│   │   └── translations/
+│   │       ├── index.ts             useTranslation() hook + Lang type
+│   │       ├── en.ts                full English strings
+│   │       └── am.ts                full Amharic strings
+│   │
+│   ├── data/                        DATA LAYER — most critical folder
+│   │   │
+│   │   ├── db.ts                    DATABASE INIT
+│   │   │                              Opens SQLite connection (singleton)
+│   │   │                              Creates all tables on first run
+│   │   │                              Runs migrations if schema version bumped
+│   │   │                              Tables:
+│   │   │                                expenses
+│   │   │                                check_items
+│   │   │                                ledger_entries
+│   │   │                                budgets
+│   │   │                                contacts
+│   │   │                                user_categories
+│   │   │                                offline_queue
+│   │   │                              Every table has:
+│   │   │                                sync_status TEXT DEFAULT 'pending'
+│   │   │                                client_updated_at TEXT (ISO timestamp)
+│   │   │
+│   │   ├── repositories/
+│   │   │   │
+│   │   │   ├── ExpenseRepository.ts
+│   │   │   │     getAll(limit, offset)
+│   │   │   │     getByDateRange(from, to, category?)
+│   │   │   │     getTodayTotal()
+│   │   │   │     getWeekTotal()
+│   │   │   │     getMonthTotal()
+│   │   │   │     getByCategoryTotals()       for charts
+│   │   │   │     save(expense)               write + queue
+│   │   │   │     update(id, changes)         write + queue
+│   │   │   │     delete(id)                  mark deleted + queue
+│   │   │   │
+│   │   │   ├── CheckRepository.ts
+│   │   │   │     getAll(limit, offset)
+│   │   │   │     getAllVerdicts()             for calcValueScore()
+│   │   │   │     save(checkItem)
+│   │   │   │     delete(id)
+│   │   │   │
+│   │   │   ├── LedgerRepository.ts
+│   │   │   │     getAll(filter?)             filter: lent/borrowed/unsettled
+│   │   │   │     getOpenSummary()            { totalOwed, totalOwe }
+│   │   │   │     save(entry)
+│   │   │   │     settle(id)                  sets settled = true
+│   │   │   │     delete(id)
+│   │   │   │
+│   │   │   ├── BudgetRepository.ts
+│   │   │   │     get()                       single row per user
+│   │   │   │     save(budget)                upsert
+│   │   │   │
+│   │   │   └── ContactRepository.ts
+│   │   │         getAll()
+│   │   │         getByName(name)
+│   │   │         upsertByName(name, phone?)
+│   │   │         save(contact)
+│   │   │         update(id, changes)
+│   │   │         delete(id)
+│   │   │
+│   │   ├── sync/
+│   │   │   │
+│   │   │   ├── queue.ts             OFFLINE QUEUE
+│   │   │   │     queueWrite(table, rowId, operation, payload)
+│   │   │   │     getPending()       all rows with sync_status = 'pending'
+│   │   │   │     getPendingCount()
+│   │   │   │     markSynced(ids[])
+│   │   │   │     markFailed(ids[])
+│   │   │   │     clearSynced()      housekeeping — delete old synced rows
+│   │   │   │
+│   │   │   ├── syncService.ts       SYNC ENGINE
+│   │   │   │     triggerSync()      main entry point
+│   │   │   │       1. check network → abort if offline
+│   │   │   │       2. get pending queue ordered by created_at ASC
+│   │   │   │       3. for each item:
+│   │   │   │            insert/update → supabase.upsert(payload)
+│   │   │   │            delete        → supabase.delete().eq('id', row_id)
+│   │   │   │       4. markSynced / markFailed
+│   │   │   │       5. update syncStore
+│   │   │   │     initialHydration()  on first login: pull all remote → SQLite
+│   │   │   │     pullRemoteChanges() on foreground: check for newer remote rows
+│   │   │   │
+│   │   │   └── backgroundTask.ts    BACKGROUND FETCH REGISTRATION
+│   │   │         TASK_NAME = 'haqly-background-sync'
+│   │   │         Defines task: calls triggerSync()
+│   │   │         registerTask(): minimumInterval 15min,
+│   │   │                         stopOnTerminate: false,
+│   │   │                         startOnBoot: true
+│   │   │
+│   │   └── supabase/
+│   │       └── client.ts            Supabase client (same project as web)
+│   │                                SUPABASE_URL + SUPABASE_ANON_KEY from env
+│   │                                Uses AsyncStorage session persistence
+│   │
+│   ├── store/                       ZUSTAND — global state only
+│   │   │
+│   │   ├── authStore.ts
+│   │   │     session: Session | null
+│   │   │     user: User | null
+│   │   │     isGuest: boolean
+│   │   │     guestId: string | null
+│   │   │     actions:
+│   │   │       signIn(email, password)
+│   │   │       signInWithGoogle()
+│   │   │       signInAsGuest()
+│   │   │       signOut()
+│   │   │       restoreSession()      called on app launch
+│   │   │
+│   │   ├── syncStore.ts
+│   │   │     status: 'online' | 'offline' | 'syncing' | 'error'
+│   │   │     pendingCount: number
+│   │   │     lastSyncedAt: string | null
+│   │   │     actions:
+│   │   │       setStatus(status)
+│   │   │       setPendingCount(n)
+│   │   │       triggerSync()          calls syncService.triggerSync()
+│   │   │
+│   │   └── uiStore.ts
+│   │         theme: 'light' | 'dark'
+│   │         language: 'en' | 'am'
+│   │         actions:
+│   │           setTheme(t)            saves to AsyncStorage
+│   │           setLanguage(l)         saves to AsyncStorage
+│   │           hydrate()              loads from AsyncStorage on launch
+│   │
+│   ├── hooks/                        DATA HOOKS — screens use these, not repositories
+│   │   │                             Each hook reads from SQLite. Never from Supabase.
+│   │   │
+│   │   ├── useHomeData.ts            single hook for home screen
+│   │   │                             returns: todayExp, monthTotal, weekTotal,
+│   │   │                                      budget, verdicts, ledgerSummary
+│   │   │                             one aggregated SQLite read, no waterfalls
+│   │   │
+│   │   ├── useExpenses.ts            today's expenses list
+│   │   ├── useHistory.ts             paginated history with filter support
+│   │   ├── useCheckItems.ts          check history + all verdicts
+│   │   ├── useLedger.ts              ledger entries with filter
+│   │   ├── useBudget.ts              single budget row
+│   │   ├── useContacts.ts            full contacts list
+│   │   ├── useCategories.ts          categories from AsyncStorage (+ DB sync)
+│   │   │
+│   │   ├── useHaptics.ts             expo-haptics wrapper
+│   │   │                             light(), medium(), heavy()
+│   │   │                             success(), warning(), error()
+│   │   │
+│   │   ├── useBiometric.ts           expo-local-authentication wrapper
+│   │   │                             isSupported(), isEnabled(), authenticate()
+│   │   │                             setEnabled() → AsyncStorage
+│   │   │
+│   │   └── useSyncStatus.ts          reads syncStore + drives SyncIcon
+│   │                                 listens to NetInfo + AppState changes
+│   │                                 triggers sync on foreground / reconnect
+│   │
+│   ├── components/                   SHARED UI COMPONENTS
+│   │   │
+│   │   ├── layout/
+│   │   │   ├── AppLayout.tsx         main content wrapper (safe area + scroll)
+│   │   │   ├── TabBar.tsx            custom tab bar (matches web design)
+│   │   │   └── ScreenHeader.tsx      screen title + optional right element
+│   │   │
+│   │   ├── charts/
+│   │   │   ├── BudgetRing.tsx        circular progress (react-native-svg)
+│   │   │   ├── ValueScoreCard.tsx    score ring + breakdown bars
+│   │   │   ├── WeeklyChart.tsx       7-day bar chart (react-native-svg)
+│   │   │   └── CategoryChart.tsx     category breakdown (react-native-svg)
+│   │   │
+│   │   ├── expense/
+│   │   │   ├── ExpenseRow.tsx        swipeable expense item
+│   │   │   ├── CategoryGrid.tsx      category selector with haptics
+│   │   │   └── AmountInput.tsx       "Br" prefix input, numeric keyboard
+│   │   │
+│   │   ├── ledger/
+│   │   │   ├── LedgerRow.tsx         swipeable ledger entry
+│   │   │   ├── PersonAvatar.tsx      initials + deterministic color
+│   │   │   └── Calculator.tsx        inline +/- calculator
+│   │   │
+│   │   ├── sheets/
+│   │   │   ├── QuickAddSheet.tsx     bottom sheet quick expense entry
+│   │   │   └── ConfirmSheet.tsx      generic confirm/cancel sheet
+│   │   │
+│   │   ├── feedback/
+│   │   │   ├── SyncIcon.tsx          cloud sync indicator (3 states)
+│   │   │   ├── InsightBanner.tsx     rule-based insight text card
+│   │   │   ├── SummaryStrip.tsx      day/week/category/value% strip
+│   │   │   ├── GuestBanner.tsx       guest mode warning strip
+│   │   │   └── SkeletonLoader.tsx    shimmer placeholder
+│   │   │
+│   │   └── shared/
+│   │       ├── Card.tsx              base card component
+│   │       ├── Button.tsx            primary + secondary variants
+│   │       ├── Input.tsx             base text input
+│   │       ├── Badge.tsx             verdict badge (worth/maybe/not)
+│   │       └── QuoteRotator.tsx      motivational quote cycling
+│   │
+│   └── services/
+│       └── notifications.ts          3 notification types
+│                                     scheduleDailySummary(hour)
+│                                     sendBudgetAlert(pct, remaining)
+│                                     scheduleLedgerReminder(person, amount)
+│                                     requestPermissions()
+│                                     registerDeviceToken(supabase)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PART 4 — DATA FLOW (the rule that drives everything)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+ONE RULE: screens never touch Supabase directly.
+
+  WRITE PATH
+    Screen calls Repository.save(data)
+        ↓
+    Repository writes to SQLite (immediate)
+        ↓
+    Repository calls queueWrite(table, id, 'insert', payload)
+        ↓
+    Screen re-renders from SQLite (instant, no waiting)
+        ↓
+    syncService.triggerSync() runs (background)
+        ↓
+    Supabase upsert with client_updated_at
+        ↓
+    Queue marked synced
+        ↓
+    SyncIcon updates to ✓
+
+  READ PATH
+    Screen mounts
+        ↓
+    Custom hook queries SQLite
+        ↓
+    Renders immediately (data is always local)
+        ↓
+    If online: pullRemoteChanges() runs silently
+        ↓
+    If remote has newer rows: SQLite updated
+        ↓
+    Hook detects change, re-renders screen
+
+  CONFLICT RESOLUTION
+    Every local write stamps client_updated_at = now()
+    Supabase upsert uses onConflict: 'id'
+    Row with newer client_updated_at wins
+    Works correctly for single-user personal data
+    No extra logic needed
+
+  FIRST LOGIN (initial hydration)
+    After auth success:
+        ↓
+    syncService.initialHydration()
+        ↓
+    Fetch all user rows from Supabase
+        ↓
+    Write to SQLite with sync_status = 'synced'
+        ↓
+    App is fully loaded, works offline from this point
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PART 5 — SQLITE SCHEMA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+expenses
+  id                TEXT PRIMARY KEY
+  user_id           TEXT NOT NULL
+  name              TEXT NOT NULL
+  amount            REAL NOT NULL
+  category          TEXT NOT NULL DEFAULT 'Other'
+  created_at        TEXT NOT NULL
+  sync_status       TEXT NOT NULL DEFAULT 'pending'
+  client_updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+
+check_items
+  id                TEXT PRIMARY KEY
+  user_id           TEXT NOT NULL
+  name              TEXT NOT NULL
+  price             REAL NOT NULL
+  uses              REAL NOT NULL
+  cost_per_use      REAL NOT NULL
+  verdict           TEXT NOT NULL      -- 'worth' | 'maybe' | 'not'
+  regret_level      INTEGER NOT NULL   -- 1–5
+  created_at        TEXT NOT NULL
+  sync_status       TEXT NOT NULL DEFAULT 'pending'
+  client_updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+
+ledger_entries
+  id                TEXT PRIMARY KEY
+  user_id           TEXT NOT NULL
+  person            TEXT NOT NULL
+  amount            REAL NOT NULL
+  currency          TEXT NOT NULL DEFAULT 'ETB'
+  type              TEXT NOT NULL      -- 'lent' | 'borrowed'
+  note              TEXT
+  settled           INTEGER NOT NULL DEFAULT 0   -- 0 = false, 1 = true
+  created_at        TEXT NOT NULL
+  sync_status       TEXT NOT NULL DEFAULT 'pending'
+  client_updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+
+budgets
+  id                TEXT PRIMARY KEY
+  user_id           TEXT NOT NULL UNIQUE
+  monthly_budget    REAL
+  weekly_budget     REAL
+  updated_at        TEXT NOT NULL
+  sync_status       TEXT NOT NULL DEFAULT 'pending'
+  client_updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+
+contacts
+  id                TEXT PRIMARY KEY
+  user_id           TEXT NOT NULL
+  name              TEXT NOT NULL
+  phone             TEXT
+  note              TEXT
+  created_at        TEXT NOT NULL
+  sync_status       TEXT NOT NULL DEFAULT 'pending'
+  client_updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+
+offline_queue
+  id                TEXT PRIMARY KEY
+  table_name        TEXT NOT NULL
+  row_id            TEXT NOT NULL
+  operation         TEXT NOT NULL   -- 'insert' | 'update' | 'delete'
+  payload           TEXT NOT NULL   -- JSON string
+  created_at        TEXT NOT NULL
+  sync_status       TEXT NOT NULL DEFAULT 'pending'  -- 'pending'|'synced'|'failed'
+
+Indexes:
+  CREATE INDEX idx_expenses_user_date    ON expenses(user_id, created_at DESC)
+  CREATE INDEX idx_expenses_category     ON expenses(user_id, category)
+  CREATE INDEX idx_ledger_user_settled   ON ledger_entries(user_id, settled)
+  CREATE INDEX idx_queue_status          ON offline_queue(sync_status, created_at ASC)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PART 6 — ZUSTAND STORE DESIGN
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Three stores. Each with persist middleware for AsyncStorage.
+
+authStore
+  State:
+    session          Session | null
+    user             User | null
+    isGuest          boolean
+    guestId          string | null
+    biometricEnabled boolean
+    initialized      boolean       prevents flash of auth redirect
+
+  Actions:
+    initialize()           restore session from AsyncStorage on launch
+    signIn(email, pass)    Supabase → store session → hydrate SQLite
+    signInWithGoogle()     OAuth → same flow
+    signInAsGuest()        Supabase anonymous or local fallback
+    signOut()              clear session + SQLite + AsyncStorage
+    lockWithBiometric()    sets requireBiometric = true
+    unlockWithBiometric()  calls useBiometric.authenticate()
+
+syncStore
+  State:
+    status           'idle' | 'syncing' | 'offline' | 'error'
+    pendingCount     number
+    lastSyncedAt     string | null
+    errorMessage     string | null
+
+  Actions:
+    triggerSync()     main sync entry point, updates status throughout
+    setOffline()      called by NetInfo listener
+    setOnline()       called by NetInfo listener, triggers sync
+
+uiStore
+  State:
+    theme            'light' | 'dark'
+    language         'en' | 'am'
+
+  Actions:
+    toggleTheme()
+    setLanguage(l)
+    hydrate()         called once on launch from AsyncStorage
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PART 7 — NATIVE FEATURES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+HAPTICS — where exactly
+  Expense saved                   → success
+  Category chip tap               → light
+  Verdict revealed: worth         → success
+  Verdict revealed: not           → error
+  Delete confirmed (swipe)        → medium
+  Ledger settled                  → success
+  Budget 80% hit                  → warning
+  Budget 100% hit                 → error
+  Bottom sheet opens              → light
+  Primary button press            → light
+
+BIOMETRICS — exact flow
+  Setting: More > Privacy > Require biometrics (toggle, default OFF)
+  Enable flow: tap toggle → biometric prompt → if success → enable
+  Gate trigger: AppState changes from background to active
+                AND last foreground was 5+ minutes ago
+  Gate screen: blurred overlay with biometric prompt
+               Fall back button → password entry
+  If hardware absent: option never appears in settings
+  If fails 3 times: fall back to Supabase password auth
+
+SYNC STATUS ICON
+  Lives in: home screen header, top right
+  States:
+    idle (synced, online)     → hidden (nothing shown — cleanest state)
+    offline                   → cloud icon, grey, small X badge
+    syncing                   → cloud icon, blue, animated pulse
+    error                     → cloud icon, amber, ! badge, tap to retry
+  Tap: offline/error state → show sheet with pending count + retry button
+  Disappears automatically when status returns to idle
+
+NOTIFICATIONS
+  All three are opt-in. Configured in More > Notifications.
+
+  Daily spending nudge
+    Default: OFF
+    Time: 9pm (user sets hour in settings)
+    Text: "How did today go? Tap to log your spending."
+    Repeating: daily
+
+  Budget alert
+    Default: ON (if budget is set)
+    Trigger: spending hits 80% of monthly budget → one notification
+             spending hits 100%                  → one notification
+    Not repeated until next month
+
+  Ledger reminder
+    Default: OFF
+    Trigger: any unsettled ledger entry older than 7 days
+    Schedule: Monday 10am weekly
+    Text: "[Person] still owes you [amount] — settled yet?"
+    One notification per unsettled person
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PART 8 — DESIGN TOKENS (NativeWind / web parity)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+These are extracted from the web app globals.css and tailwind config.
+NativeWind tailwind.config.js must define these exactly.
+
+Colors (light mode)
+  bg          #FFFFFF       page background
+  surface     #F2F2F7       card background
+  line        #E5E5EA       borders, dividers
+  ink         #1C1C1E       primary text
+  ink2        #3A3A3C       secondary text
+  ink3        #8E8E93       tertiary text / labels
+  accent      #00C47A       primary green (Haqly brand)
+  accent-dark #009A5E       darker green for active states
+  accent-muted #E8FBF3      light green tint background
+  info        #0A84FF       blue (links, ledger)
+  warn        #FF9500       orange (maybe verdict)
+  danger      #FF3B30       red (not verdict, errors)
+
+Colors (dark mode — applied via NativeWind dark: prefix)
+  bg          #000000
+  surface     #1C1C1E
+  line        #38383A
+  ink         #FFFFFF
+  ink2        #EBEBF5
+  ink3        #8E8E93
+  (accent, info, warn, danger same values)
+
+Typography
+  Font: System font (SF Pro on iOS, Roboto on Android)
+  NativeWind handles this automatically
+
+Border radius
+  rounded-2xl used throughout (16px) — matches web .card, .btn-*, .input-base
+  rounded-xl for smaller elements (12px)
+
+Spacing
+  The web app uses p-4 (16px) for cards, py-3 px-4 for list rows
+  Match these exactly in mobile components
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PART 9 — BUILD ORDER
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Do these in order. Do not skip ahead.
+Each phase must be stable before the next starts.
+
+PHASE 1 — FOUNDATION
+  [ ] Expo project init with expo-router, NativeWind, TypeScript
+  [ ] Folder structure created (all folders, empty index files)
+  [ ] core/utils.ts copied from web (zero changes)
+  [ ] core/types.ts, core/constants.ts defined
+  [ ] core/translations/ populated (en + am)
+  [ ] db.ts: SQLite opens, all tables created on launch
+  [ ] All 5 repositories implemented with full method signatures
+  [ ] offline_queue.ts: queueWrite, getPending, markSynced, markFailed
+  [ ] Zustand stores: authStore, syncStore, uiStore (with AsyncStorage persist)
+  [ ] Supabase client configured
+  [ ] Root _layout.tsx: all providers + db init + task registration
+  [ ] Auth screen working: login, signup, guest, session restore
+  [ ] Tab layout with auth guard: 6 tabs, correct icons, correct labels
+  [ ] App launches, auth works, tabs visible ← PHASE 1 DONE
+
+PHASE 2 — DATA LAYER VERIFIED
+  [ ] All hooks implemented (useHomeData, useExpenses, useHistory, etc.)
+  [ ] Expense save → SQLite → queue verified in isolation (no UI yet)
+  [ ] syncService.triggerSync() tested manually
+  [ ] initialHydration() tested: login → pulls Supabase data → SQLite populated
+  [ ] syncStore updates correctly during sync cycle
+  [ ] NetInfo listener wired: offline → syncStore, reconnect → triggerSync
+  [ ] backgroundTask registered and firing
+  [ ] Airplane mode test: add expense offline, reconnect, verify it syncs ← PHASE 2 DONE
+
+PHASE 3 — CORE SCREENS
+  [ ] Home screen: all data sections rendering from SQLite
+  [ ] Expense screen: form working, save flow, today list
+  [ ] Check screen: calculator, live verdict, save flow
+  [ ] History screen: paginated list, date grouping, filter chips, weekly chart
+  [ ] All screens work offline ← PHASE 3 DONE
+
+PHASE 4 — REMAINING SCREENS
+  [ ] Ledger: entries list, add form, split calculator, settle toggle
+  [ ] Settings/More: budget save, category management, contacts
+  [ ] Profile display, language toggle, theme toggle ← PHASE 4 DONE
+
+PHASE 5 — NATIVE FEATURES
+  [ ] Haptics wired to all specified interaction points
+  [ ] QuickAddSheet (bottom sheet) replacing FAB modal
+  [ ] Swipe-to-delete on expense rows and ledger entries
+  [ ] Pull-to-refresh on all data screens
+  [ ] SyncIcon in home header (3 states wired to syncStore)
+  [ ] Biometric toggle in settings + gate in tab layout
+  [ ] Push notifications: permissions, 3 types, toggles in settings
+  [ ] All animations: entry fades, card press springs, score rings ← PHASE 5 DONE
+
+PHASE 6 — LAUNCH PREP
+  [ ] App icon and splash screen
+  [ ] EAS build config (eas.json: development, preview, production)
+  [ ] Environment variables via EAS secrets
+  [ ] TestFlight internal build submitted
+  [ ] Android internal track submitted
+  [ ] Airplane mode full regression test
+  [ ] Performance profiling (no jank on scroll, no memory leaks)
+  [ ] App Store / Play Store listings ← SHIP
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PART 10 — THE RULES (non-negotiable)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Screens never import from data/ directly.
+   Screens use hooks. Hooks use repositories. Repositories use SQLite.
+
+2. Screens never call Supabase directly.
+   All remote operations go through syncService.
+
+3. Every write goes through a repository.
+   No direct SQLite inserts outside of repositories.
+
+4. core/ has zero React Native imports.
+   It must stay portable for the web app.
+
+5. Never block the UI for a network operation.
+   Write locally first, always. Show the result immediately.
+
+6. The sync icon is the only visible sync feedback.
+   No loading spinners for data that's already in SQLite.
+   No toasts on sync success.
+   No modals on sync failure (just icon state change).
+
+7. Haptics have one entry point: useHaptics().
+   Never call expo-haptics directly in a component.
+
+8. All business logic lives in core/utils.ts.
+   No calculation logic in components or hooks.
+   Components display. Hooks fetch. Utils calculate.
+
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PART 11 — STREAK SYSTEM
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+A streak = any day with at least one expense OR income logged.
+The mechanic is simple. The impact on daily retention is not.
+
+CALCULATION (runs on home screen load)
+  SELECT DISTINCT date(created_at) as day
+  FROM expenses
+  WHERE user_id = ?
+  ORDER BY day DESC
+
+  Walk backwards from today. Count consecutive days with no gap.
+  Today is included even if nothing logged yet — the streak isn't
+  broken until the day ends with zero entries.
+
+DISPLAY RULE
+  Only shown if streak >= 3 days.
+  Position: below greeting line on home screen.
+  Format: 🔥 12 days  (small, quiet — not a banner)
+  At 0–2 days: hidden entirely.
+
+RESET RULE
+  If yesterday has zero entries AND today has zero entries → reset to 0.
+  One missed day breaks the streak.
+  This is intentional. The tension is the mechanic.
+
+SCHEMA CHANGE NEEDED
+  Add type column to expenses table:
+    type TEXT NOT NULL DEFAULT 'expense'
+    CHECK (type IN ('expense', 'income'))
+  Streak query pulls from same table regardless of type.
+
+FUTURE MILESTONES (not now, later)
+  7 days  → quiet note in Stats section
+  30 days → quiet note in Stats section
+  No push notification for milestones — too aggressive.
+
+WHY THIS WORKS
+  Once a user hits day 7+, they open the app daily just to preserve
+  the number. It turns weekly users into daily users without any
+  push notification, without any gamification UI. Just a number.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PART 12 — INCOME TRACKING + STUDENT CATEGORY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+CORE DECISION
+  Income uses the same expenses table. Not a new table.
+  Add one column: type TEXT DEFAULT 'expense' CHECK ('expense','income')
+  Amount is always stored as positive. Type determines direction.
+  This keeps queries simple and the schema clean.
+
+INCOME CATEGORIES (exact, in order)
+  Salary     — regular employment
+  Freelance  — project or gig-based work
+  Business   — own business revenue
+  Investment — returns, dividends, savings interest
+  Bonus      — one-time extra on top of salary
+  Student    — allowance, scholarship, family support
+  Other      — anything that doesn't fit
+
+THE STUDENT CATEGORY
+  No elaboration needed in the UI. The word alone covers:
+    - Monthly allowance from family
+    - Government or university scholarship
+    - Small part-time income they don't classify as freelance
+  A student user sees "Student" and immediately understands
+  it's for them. Don't over-explain it.
+
+SCHEMA CHANGE (additive, no migration needed)
+  ALTER TABLE expenses ADD COLUMN type TEXT NOT NULL DEFAULT 'expense'
+    CHECK (type IN ('expense', 'income'));
+
+  All existing rows default to 'expense'. Clean.
+
+UX FLOW
+  Expense screen gets a toggle at the top: Expense ↔ Income.
+  Same form. Same amount input. Category grid swaps to income categories.
+  Save goes through ExpenseRepository.save() with type='income'.
+  Queue, sync, offline — all identical to expense flow.
+
+BALANCE ON HOME SCREEN
+  Only shows when at least one income entry exists.
+  If no income logged: home shows current spend-only view (unchanged).
+  When income exists:
+    Earned this month: Br X
+    Spent this month:  Br Y
+    Remaining:         Br Z
+
+BUDGET RING UPGRADE
+  Current: ring = monthly_spend / manual_budget
+  New option: ring = monthly_spend / monthly_income
+  Small toggle near the ring: "Budget" vs "Income"
+  If no income logged: toggle not shown, ring stays as-is.
+
+INSIGHT ENGINE UPDATE (generateInsight() in utils.ts)
+  New rule added to priority list:
+    If monthly_spend > 75% of monthly_income:
+      → "You've used 75% of this month's income — mostly on [top category]"
+  Student context makes this especially meaningful:
+    Spending Br 2,400 of a Br 3,000 allowance = 80%.
+    That hits differently than the same number with no income reference.
+
+HISTORY SCREEN UPDATE
+  Income rows show with green + prefix on amount.
+  Expense rows stay as-is (red or default).
+  Filter chips: All · Expenses · Income · [categories]
+  Daily group totals: net = income - expenses for that day (shown subtly).
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PART 13 — GUEST MODE + ACCOUNT MIGRATION FLOW
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PHILOSOPHY
+  Full functionality in guest mode. No features locked.
+  No "sign up to continue" walls.
+  The account exists to back up data and sync across devices.
+  That's the only sell. Let the product earn the sign-up.
+
+GUEST MODE FLOW
+  1. User taps "Continue as Guest" on auth screen.
+  2. guestId generated: guest_[timestamp]_[random]
+     Stored in AsyncStorage key: 'haqly_guest_id'
+  3. authStore.isGuest = true, authStore.guestId = guestId
+  4. All SQLite writes use guestId as user_id.
+  5. syncService checks for session → none → skips Supabase.
+  6. Queue fills but never drains. That's fine.
+  7. GuestBanner shows on home and More screens.
+
+GUEST BANNER
+  Home screen: subtle strip below greeting.
+  Text: "Your data is saved on this device only."
+  Action: "Back up my data →"
+  More screen: prominent card at top of settings.
+  Text: "Create a free account to back up and sync your data."
+  Action: "Create account" button.
+  Dismiss: not dismissable. It stays until they migrate.
+
+GUEST LIMITATIONS (only these, nothing else)
+  - No cloud backup
+  - No multi-device sync
+  - If app is deleted or device changes: data is gone
+  All of this is explained clearly, not hidden.
+
+MIGRATION FLOW (guest → account)
+  Step 1: User taps "Create account" from banner.
+  Step 2: Standard signup form (same auth screen, signup tab).
+  Step 3: On Supabase user creation success:
+    a. Real UUID received from Supabase auth.
+    b. UPDATE expenses SET user_id = [real_uuid]
+       WHERE user_id = [guest_id]
+       — repeated for all 5 tables.
+    c. UPDATE offline_queue SET payload = replace(payload, guest_id, real_uuid)
+       WHERE sync_status = 'pending'
+    d. All rows now have real UUID. All marked sync_status = 'pending'.
+    e. triggerSync() fires → full queue drains to Supabase.
+    f. AsyncStorage clears 'haqly_guest_id'.
+    g. authStore.isGuest = false, guestId = null.
+    h. GuestBanner disappears. SyncIcon shows ✓.
+  Step 4: User is now a full authenticated user.
+          Their complete history is in the cloud. Nothing lost.
+
+EDGE CASES
+  Migration fails midway: guest_id rows stay in SQLite, queue untouched.
+  Retry on next triggerSync(). Idempotent — safe to run multiple times.
+
+  User already has an account on another device:
+  Login flow (not signup) + initialHydration() pulls cloud data.
+  Local guest data is separate. We don't auto-merge guest + existing account.
+  Show user a choice: "Keep cloud data" or "Replace with device data".
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PART 14 — UPDATED SCHEMA (all changes combined)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Changes from Part 5 baseline:
+
+expenses (updated)
+  + type  TEXT NOT NULL DEFAULT 'expense'
+          CHECK (type IN ('expense', 'income'))
+
+  Full updated schema:
+    id                TEXT PRIMARY KEY
+    user_id           TEXT NOT NULL
+    name              TEXT NOT NULL
+    amount            REAL NOT NULL
+    category          TEXT NOT NULL DEFAULT 'Other'
+    type              TEXT NOT NULL DEFAULT 'expense'
+    created_at        TEXT NOT NULL
+    sync_status       TEXT NOT NULL DEFAULT 'pending'
+    client_updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+
+Indexes (updated):
+  CREATE INDEX idx_expenses_type ON expenses(user_id, type, created_at DESC)
+  — existing indexes unchanged
+
+STREAK QUERY (no schema change, just logic)
+  SELECT DISTINCT date(created_at) as day
+  FROM expenses
+  WHERE user_id = ?
+  ORDER BY day DESC
+  — runs across all types (expense + income both count)
+
+Supabase schema (same additive change):
+  ALTER TABLE public.expenses
+    ADD COLUMN type TEXT NOT NULL DEFAULT 'expense'
+    CHECK (type IN ('expense', 'income'));
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PART 15 — UPDATED BUILD ORDER (with new features)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Phase 1 additions:
+  [ ] expenses table includes type column from the start
+  [ ] Guest mode works on first launch (no account needed)
+
+Phase 2 additions:
+  [ ] Streak calculation in useHomeData()
+  [ ] Streak display on home (hidden < 3 days)
+
+Phase 3 additions:
+  [ ] Income toggle on expense screen
+  [ ] All 7 income categories including Student
+  [ ] Balance section on home (conditional on income existing)
+  [ ] Budget ring income-mode toggle
+
+Phase 4 additions:
+  [ ] GuestBanner on home and More screens
+  [ ] Guest → Account migration flow in More
+  [ ] Income filter in History screen
+  [ ] Updated Weekly chart (expense + income bars)
+  [ ] generateInsight() updated with income ratio rule
+
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PART 11 — NEW FEATURES (ADDED)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+──────────────────────────────────────────────────────────
+A. STREAK SYSTEM
+──────────────────────────────────────────────────────────
+
+What it is:
+  Counts consecutive calendar days where at least one expense
+  OR income entry was logged. Miss a full day → resets to 0.
+
+Logic (runs in SQLite, no Supabase call needed):
+  SELECT DISTINCT date(created_at) as day
+  FROM expenses
+  WHERE user_id = ?
+  ORDER BY day DESC
+
+  Walk the list backwards from today.
+  Count consecutive days with no gap.
+  If today has no entry yet — streak is still alive (day not over).
+  If yesterday has no entry — streak is broken.
+
+Storage:
+  Calculated on demand from SQLite. Not stored separately.
+  Fast enough — local query, no network.
+
+Where it shows:
+  Home screen, below greeting, top area.
+  Format: 🔥 14 days
+  Only visible when streak >= 3.
+  Under 3 days — hidden. Not worth showing until it means something.
+
+Milestone moments (subtle, not loud):
+  7 days  → small glow on the streak badge, nothing else
+  30 days → insight banner acknowledges it once
+  No confetti. No full-screen celebration. Haqly is minimal.
+
+Hook effect:
+  Once a user hits 7+ days they will open the app daily
+  just to protect the number. This is intentional.
+  Same mechanic as Duolingo. Applied to financial discipline.
+
+SQLite — no schema change needed.
+  Streak is derived from existing expenses table.
+  Just a query, not a stored value.
+
+──────────────────────────────────────────────────────────
+B. INCOME TRACKING + STUDENT CATEGORY
+──────────────────────────────────────────────────────────
+
+Where it lives:
+  Expense screen gets a toggle at the top: Expense | Income
+  Same form underneath. Only the category list changes.
+  No new screen needed.
+
+Income categories (exact, in order):
+  Salary, Freelance, Business, Investment, Bonus, Student, Other
+
+Why Student:
+  A student's income is an allowance from family, a scholarship,
+  or a small irregular side earning.
+  "Salary" doesn't apply. "Other" feels dismissive.
+  Student is honest and immediate — they see it and know it's theirs.
+  No explanation needed in the UI. The word does the work.
+
+SQLite schema change:
+  Add type column to expenses table:
+    type TEXT NOT NULL DEFAULT 'expense'  -- 'expense' | 'income'
+
+  Migration: ALTER TABLE expenses ADD COLUMN type TEXT DEFAULT 'expense'
+  All existing rows default to 'expense'. Safe.
+
+Supabase schema change:
+  ALTER TABLE public.expenses ADD COLUMN type TEXT DEFAULT 'expense';
+
+How balance works:
+  monthIncome  = SUM(amount) WHERE type='income'  AND month = current
+  monthExpense = SUM(amount) WHERE type='expense' AND month = current
+  balance      = monthIncome - monthExpense
+
+Home screen shows:
+  If income logged:
+    Earned Br X   |   Spent Br Y   |   Left Br Z
+    Budget ring uses income as ceiling (if no manual budget set)
+    If manual budget set → manual budget takes priority
+
+  If no income logged yet:
+    Budget ring works exactly as before (manual budget only)
+    No balance strip shown — don't show "Left: Br 0" when there's no data
+
+Insight engine update (generateInsight):
+  New rule: if monthExpense > monthIncome → "spending exceeds income this month"
+  New rule: if monthExpense > 75% of monthIncome → surface the ratio
+  New rule: if source is Student and spending is high → gentler tone
+
+Category grid on income form:
+  Same grid layout as expense categories.
+  Different set of chips.
+  Last selected income category persists (AsyncStorage).
+
+Repository change — ExpenseRepository:
+  getMonthIncome()    → SUM where type='income' and month=current
+  getMonthExpense()   → SUM where type='expense' and month=current  (existing)
+  getBalance()        → income - expense
+
+──────────────────────────────────────────────────────────
+C. GUEST MODE — FULL FUNCTIONALITY + MIGRATION TO ACCOUNT
+──────────────────────────────────────────────────────────
+
+Philosophy:
+  Guest users get 100% of the product.
+  No feature gates. No "sign up to continue" walls.
+  The only thing guest mode doesn't have is cross-device sync.
+  Account creation is framed as: "protect and back up what you've built."
+  Not a gate. A reward.
+
+How guest mode works technically:
+  On "Continue as Guest" tap:
+    Generate a local UUID → store in AsyncStorage as 'haqly_guest_id'
+    This becomes user_id for all local SQLite writes
+    Supabase is not called at all
+    Sync service detects no session → skips silently
+    App works identically to logged-in mode
+
+  Everything goes to SQLite under the guest UUID.
+  Expenses, checks, ledger, budget, categories — all local.
+  Offline queue exists but never drains (no session to sync to).
+
+Guest banner:
+  Shows in More/Settings screen only (not home — not intrusive).
+  Text: "Your data is saved on this device only."
+  CTA button: "Create account to back up"
+  Subtle. Not a red warning. Not a modal. Just honest.
+
+Migration flow — when guest creates an account:
+  Step 1: Guest taps "Create account to back up"
+  Step 2: Standard signup form (email + password or Google)
+  Step 3: Supabase creates real account → returns real user UUID
+  Step 4: Migration runs:
+
+    migrationService.migrateGuestData(guestId, realUserId)
+      - SELECT all rows from SQLite where user_id = guestId
+      - UPDATE each row: SET user_id = realUserId
+      - Mark all as sync_status = 'pending'
+      - Trigger full sync → all data uploads to Supabase
+      - Clear guest UUID from AsyncStorage
+      - Update authStore: isGuest = false, user = real user
+
+  Step 5: App continues exactly where they left off.
+          Streak intact. History intact. Everything intact.
+          They just gained cloud sync and multi-device access.
+
+Migration is a one-way operation.
+No data is lost. No screen changes. It happens silently in the background
+while the user is already looking at their home screen.
+
+What if they skip account creation forever?
+  That's fine. App works indefinitely as guest.
+  If they uninstall, data is gone. That's the only cost.
+  We never punish them for staying in guest mode.
+
+authStore changes:
+  isGuest: boolean
+  guestId: string | null
+  signInAsGuest()          → generates UUID, sets isGuest = true
+  migrateGuestToAccount()  → runs migration then signs in normally
+
+migrationService.ts (new file in services/)
+  migrateGuestData(guestId, realUserId)  → as above
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PART 12 — FULL APP FLOW (every path, every state)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+──────────────────────────────────────────────────────────
+ENTRY FLOWS
+──────────────────────────────────────────────────────────
+
+FLOW A — First ever launch
+  App opens
+    → No session, no guest ID in AsyncStorage
+    → Auth screen
+        → "Sign in" tab → email + password → Home
+        → "Sign up" tab → email + password → Home (+ hydration)
+        → "Google" button → OAuth → Home (+ hydration)
+        → "Continue as Guest" → generate UUID → Home (full access)
+
+FLOW B — Returning signed-in user
+  App opens
+    → Session found in AsyncStorage
+    → Biometric enabled? Yes → biometric gate
+        → Biometric passes → Home
+        → Biometric fails 3x → password fallback → Home
+    → Biometric disabled → Home directly
+
+FLOW C — Returning guest
+  App opens
+    → No session, BUT guest UUID found in AsyncStorage
+    → Skip auth entirely
+    → Home (full access, no sync)
+
+FLOW D — Session expired
+  App opens
+    → Session found but expired
+    → Supabase refreshes token automatically
+    → If refresh fails → Auth screen
+    → User signs in → data already in SQLite → Home instantly
+
+──────────────────────────────────────────────────────────
+HOME SCREEN FLOW
+──────────────────────────────────────────────────────────
+
+Lands on Home
+  ↓
+  useHomeData() queries SQLite (single aggregated read)
+  Renders immediately — no loading state
+  ↓
+  What renders (top to bottom):
+    SyncIcon (top right — only if offline/syncing/error)
+    Greeting: "Good evening, [name]" + 🔥 streak (if >= 3 days)
+    InsightBanner: rule-based text from generateInsight()
+    Balance strip (if income logged): Earned | Spent | Left
+    BudgetRing: month spend vs budget/income ceiling
+    ValueScoreCard (if checks exist): 0-100 score + breakdown
+    Quick actions: 4 tappable cards
+      → Add Expense (opens Expense tab)
+      → Log Income (opens Expense tab, income toggle pre-selected)
+      → Check Value (opens Check tab)
+      → Add Ledger (opens Ledger tab)
+    Recent today: last 4 expenses, "See all" → History
+    Ledger summary: open unsettled entries (if any exist)
+  ↓
+  FAB (bottom right): opens QuickAddSheet (bottom sheet)
+
+QuickAddSheet flow:
+  Bottom sheet snaps to 45%
+  Toggle: Expense | Income at top
+  Name field (autofocus)
+  Amount field (Br prefix, numeric keyboard)
+  Category grid (6 chips)
+  Save button → haptic success → sheet closes → home refreshes
+
+──────────────────────────────────────────────────────────
+EXPENSE SCREEN FLOW
+──────────────────────────────────────────────────────────
+
+Expense tab opens
+  ↓
+  Toggle at top: Expense (default) | Income
+  ↓
+  IF Expense selected:
+    Name input
+    Amount input (Br prefix)
+    Category grid: Meals / Transport / Extras / Bills / Health / Other
+    Last used category pre-selected
+    Save →
+      haptic success
+      ExpenseRepository.save({ ...data, type: 'expense' })
+      SQLite write + queue entry
+      Form resets (category stays selected)
+      Today list refreshes
+  ↓
+  IF Income selected:
+    Name input (e.g. "June salary", "Family transfer")
+    Amount input (Br prefix)
+    Category grid: Salary / Freelance / Business / Investment / Bonus / Student / Other
+    Last used income category pre-selected
+    Save →
+      haptic success
+      ExpenseRepository.save({ ...data, type: 'income' })
+      SQLite write + queue entry
+      Form resets
+      Today list refreshes
+
+Today list (below form):
+  Shows today's expenses AND income entries
+  Income entries have a soft green left border (visual distinction)
+  Expense entries are standard
+  Swipe left → delete (haptic medium → confirm sheet → haptic error on confirm)
+
+──────────────────────────────────────────────────────────
+CHECK SCREEN FLOW
+──────────────────────────────────────────────────────────
+
+Check tab opens
+  ↓
+  Input: Item name
+  Input: Price (Br)
+  Input: How many times will you use it?
+  ↓
+  Live calculation as user types (no submit needed for preview):
+    cost per use = price / uses
+    verdict + regret calculated in real time via calcCheck()
+    Result card appears below:
+      "Br 4.50 per use"
+      Badge: WORTH IT / MAYBE / SKIP IT
+      Regret meter: 1–5 visual
+  ↓
+  Save button →
+    haptic: success (worth) or error (not) or light (maybe)
+    CheckRepository.save(item)
+    SQLite write + queue
+    Form resets
+    Scroll to history
+  ↓
+  History list below:
+    All saved checks
+    Verdict badge on each row
+    Swipe to delete
+  ↓
+  Verdict scale reference (always visible at bottom):
+    Under Br 1/use → Worth it
+    Br 1–5/use     → Maybe
+    Over Br 5/use  → Skip it
+
+──────────────────────────────────────────────────────────
+LEDGER SCREEN FLOW
+──────────────────────────────────────────────────────────
+
+Ledger tab opens → defaults to Entries tab
+  ↓
+  Three tabs: Entries | Add | Split
+
+ENTRIES TAB:
+  Filter chips: All / Lent / Borrowed / Unsettled
+  List of entries:
+    Person avatar (initials, deterministic color by name)
+    Name + note + date
+    Amount + currency badge (ETB or USD)
+    Lent (green) or Borrowed (blue) indicator
+    Settled toggle → tap → haptic success → LedgerRepository.settle(id)
+    Swipe to delete
+
+ADD TAB:
+  Person field (with ContactPicker autocomplete from contacts table)
+  Amount + currency toggle: ETB | USD
+  Type toggle: I lent | I borrowed
+  Note field (optional)
+  Built-in calculator row (+ and − buttons adjust amount)
+  Save → LedgerRepository.save() → SQLite + queue → back to Entries tab
+
+SPLIT TAB:
+  Total amount field
+  People list (add/remove names)
+  Auto-calculates: amount ÷ number of people
+  Each person row shows their share
+  "Save as lent entries" →
+    Creates one ledger entry per person
+    All type = 'lent', same amount = split share
+    All saved to SQLite + queued for sync
+    Navigate to Entries tab
+
+──────────────────────────────────────────────────────────
+HISTORY SCREEN FLOW
+──────────────────────────────────────────────────────────
+
+History tab opens
+  ↓
+  WeeklyChart: 7-day bar chart (last 7 days spending, react-native-svg)
+    Expenses and income shown as different bar colors
+  ↓
+  Filter chips (horizontal scroll):
+    All | Meals | Transport | Extras | Bills | Health | Other
+    + Income (if income entries exist)
+  ↓
+  Expense list (paginated, 20 per load):
+    Grouped by date with dayLabel()
+    Each row: category emoji + name + amount
+    Income rows: soft green tint, +Br prefix
+    Tap row → inline edit (name, amount, category)
+    Swipe left → delete
+  ↓
+  Load more: scroll to bottom → next 20 rows load
+  Pull to refresh → triggers sync + reloads from SQLite
+
+──────────────────────────────────────────────────────────
+MORE / SETTINGS FLOW
+──────────────────────────────────────────────────────────
+
+More tab opens
+  ↓
+  IF GUEST:
+    Guest banner at top:
+    "Saved on this device only"
+    [Create account to back up] button
+      → Signup form
+      → On success: migrationService.migrateGuestData()
+      → Sync runs silently
+      → Banner disappears
+      → User is now signed in, data intact
+  ↓
+  Sections:
+
+  PROFILE
+    Name (editable)
+    Email (read only)
+    Avatar initials display
+
+  BUDGET
+    Monthly budget input (Br)
+    Weekly budget input (Br, optional)
+    Save → BudgetRepository.save() → SQLite + queue
+
+  CATEGORIES
+    Current list with remove (×) buttons
+    Add new category input + add button
+    Changes → AsyncStorage + user_categories table sync
+
+  CONTACTS
+    List of saved contacts
+    Add: name + phone (optional)
+    Edit inline
+    Delete with swipe
+
+  APPEARANCE
+    Theme toggle: Light | Dark
+    Language toggle: English | አማርኛ
+
+  PRIVACY
+    Biometric toggle (only shows if hardware available)
+    Enable → biometric prompt to confirm → enabled
+
+  NOTIFICATIONS
+    Daily nudge toggle + time picker (default 9pm)
+    Budget alert toggle (default on if budget set)
+    Ledger reminder toggle (default off)
+
+  STATS (read only)
+    Total expenses logged (count)
+    Total amount tracked (Br)
+    Current value score
+    Longest streak
+    Member since date
+
+  SIGN OUT
+    Confirmation sheet → sign out → clear session → Auth screen
+    SQLite data remains (for if they sign back in)
+
+──────────────────────────────────────────────────────────
+SYNC FLOW (background, no user action needed)
+──────────────────────────────────────────────────────────
+
+Trigger points:
+  1. App comes to foreground (AppState: background → active)
+  2. Network reconnects (NetInfo event: isConnected = true)
+  3. Background fetch fires (every 15 min, OS-managed)
+  4. User pulls to refresh on any screen
+
+Sync process:
+  syncStore.setStatus('syncing')
+  SyncIcon → blue pulse
+  ↓
+  Check network → if offline: setStatus('offline'), stop
+  ↓
+  Get all pending from offline_queue ORDER BY created_at ASC
+  ↓
+  For each item:
+    insert/update → supabase.from(table).upsert(payload, {onConflict:'id'})
+    delete        → supabase.from(table).delete().eq('id', row_id)
+  ↓
+  Success → markSynced([ids])
+  Failure → markFailed([ids]) → will retry next trigger
+  ↓
+  syncStore.setStatus('online')
+  syncStore.lastSyncedAt = now()
+  SyncIcon → hidden (idle state)
+
+Conflict resolution:
+  Every local write stamps client_updated_at = now()
+  Supabase upsert: newer client_updated_at wins
+  Single user app → conflicts are rare → last write wins is correct
+
