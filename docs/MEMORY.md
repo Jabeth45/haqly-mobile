@@ -26,13 +26,14 @@ Last updated: 2026-10-22 by: agent (TASK-020)
 - Phase 2 (Data Layer) In Progress:
   - TASK-020: Drift SQLite database implemented in `lib/data/db/` (`tables.dart`, `app_database.dart`, `app_database.g.dart`) with schema version 1. All 8 tables (`expenses`, `check_items`, `ledger_entries`, `budgets`, `contacts`, `user_categories`, `outbox`, `sync_meta`), constraints, default values (`user_id = 'LOCAL'`), and 10 query optimization indexes created. In-memory testing constructor and schema migration test harness implemented with 100% passing tests.
   - TASK-021: `ExpenseRepository` implemented in `lib/data/repositories/expense_repository.dart` backed by `AppDatabase` and pure Dart domain models (`Expense`, `TransactionType`, `CategoryTotal`). Atomically writes local records and coalesced outbox pointers in a single DB transaction. Soft delete sets `deleted_at` and enqueues outbox pointer. Stream watchers (`watchAll`, `watchByDate`, `watchByDateRange`), aggregations (`getTotalsForDate`, `getTotalsForDateRange`, `getByCategoryTotals`), and balance calculations (`getBalanceForDateRange`, `getMonthBalance`) fully covered by 10 comprehensive unit tests with in-memory SQLite.
+  - TASK-022: `CheckRepository` implemented in `lib/data/repositories/check_repository.dart` backed by `AppDatabase` and pure Dart domain model `CheckItem`. Writes/upserts and soft deletes execute atomically with coalesced outbox sync pointers. Provides reactive streams (`watchAll`, `watchByDate`) and query filters (`getVerdicts`, `getRecentVerdicts`) for value score calculations. Fully covered by 8 automated real-SQLite tests.
 
 ## In progress
 - Phase 2: Data Layer (Drift SQLite local DB, repositories, outbox sync).
-  - Next: TASK-022: CheckRepository (+verdict list).
+  - Next: TASK-023: LedgerRepository (filters, open summary, settle, split-save).
 
 ## Next
-- TASK-022: CheckRepository.
+
 - TASK-023: LedgerRepository.
 - TASK-024: Budget, Contact, Category repositories.
 
