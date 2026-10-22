@@ -31,8 +31,8 @@ Every task also meets the gates in TEST_PLAN section 1. "Blocked by" refers to O
 | ID | Task | Dep | Acceptance |
 |---|---|---|---|
 | TASK-020 | [DONE] Drift DB, all tables, indexes, schema version 1, migration test harness | 010 | Opens, creates tables, migration test runs |
-| TASK-021 | ExpenseRepository (expense+income): CRUD, soft delete, today/week/month totals, by-category, income/expense/balance | 020, 013 | Tests incl. `local_date` grouping; save writes row + outbox atomically |
-| TASK-022 | CheckRepository (+verdict list) | 020, 011 | |
+| TASK-021 | [DONE] ExpenseRepository (expense+income): CRUD, soft delete, today/week/month totals, by-category, income/expense/balance | 020, 013 | Tests incl. `local_date` grouping; save writes row + outbox atomically |
+| TASK-022 | [DONE] CheckRepository (+verdict list) | 020, 011 | |
 | TASK-023 | LedgerRepository (filters, open summary, settle, split-save) | 020, 015 | |
 | TASK-024 | Budget, Contact, Category repositories | 020 | |
 | TASK-025 | Outbox: enqueue, coalesce, attempts, backoff | 020 | Unit tests incl. crash-safety |
