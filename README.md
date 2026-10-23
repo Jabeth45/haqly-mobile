@@ -1,4 +1,4 @@
-# Haqly — Offline-First Personal Finance for Ethiopia
+# Haqly — Offline-First Personal Finance App
 
 [![CI](https://github.com/haqly/haqly-mobile/actions/workflows/ci.yml/badge.svg)](https://github.com/haqly/haqly-mobile/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-emerald.svg)](LICENSE)
