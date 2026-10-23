@@ -1,4 +1,4 @@
-# Haqly (ሓቅ) — Offline-First Personal Finance for Ethiopia
+# Haqly — Offline-First Personal Finance for Ethiopia
 
 [![CI](https://github.com/haqly/haqly-mobile/actions/workflows/ci.yml/badge.svg)](https://github.com/haqly/haqly-mobile/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-emerald.svg)](LICENSE)
@@ -6,7 +6,7 @@
 [![Dart](https://img.shields.io/badge/Dart-3.x-0175C2.svg)](https://dart.dev)
 [![Architecture: Clean Offline-First](https://img.shields.io/badge/Architecture-Clean%20Offline--First-00C47A.svg)](docs/ARCHITECTURE.md)
 
-> **Haqly** (from Amharic **ሓቅ** / Arabic **حق**, meaning *Truth, Reality, Fairness*) is a privacy-first, offline-first personal finance application tailored for the Ethiopian economic reality. It helps users track cash flows in Ethiopian Birr (ETB), evaluate purchase value to curb impulse spending, and manage informal lent/borrowed debts with fair-split math.
+> **Haqly** (from Amharic **ሓቅ**, meaning *Truth, Reality, Fairness*) is a privacy-first, offline-first personal finance application tailored for the Ethiopian economic reality. It helps users track cash flows in Ethiopian Birr (ETB), evaluate purchase value to curb impulse spending, and manage informal lent/borrowed debts with fair-split math.
 
 ---
 
