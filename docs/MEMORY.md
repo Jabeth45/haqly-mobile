@@ -1,6 +1,6 @@
 # MEMORY — current state (update at the end of EVERY session)
 
-Last updated: 2026-10-24 by: agent (TASK-024)
+Last updated: 2026-10-24 by: agent (TASK-025)
 
 ## Done
 - Documentation pack created and audited.
@@ -29,15 +29,16 @@ Last updated: 2026-10-24 by: agent (TASK-024)
   - TASK-022: `CheckRepository` implemented in `lib/data/repositories/check_repository.dart` backed by `AppDatabase` and pure Dart domain model `CheckItem`. Writes/upserts and soft deletes execute atomically with coalesced outbox sync pointers. Provides reactive streams (`watchAll`, `watchByDate`) and query filters (`getVerdicts`, `getRecentVerdicts`) for value score calculations. Fully covered by 8 automated real-SQLite tests.
   - TASK-023: `LedgerRepository` implemented in `lib/data/repositories/ledger_repository.dart` backed by `AppDatabase` and pure Dart domain entities (`LedgerEntry`, `LedgerType`, `LedgerSummary`, and RFC 4122 v4 generator in `uuid_utils.dart`). Atomically writes records and coalesced outbox pointers in a single DB transaction. Settle toggle updates `settled` flag and outbox pointer. Soft delete sets `deleted_at` and enqueues outbox pointer. Supports filtering by `type` (lent/borrowed) and `settled` status. Reactive and one-shot open summaries track ETB and USD net balances independently without conversion (per OPEN-015). `saveSplit` converts `SplitResult` into individual lent debt entries excluding payer in a single DB transaction. Fully covered by 20 automated real-SQLite tests.
   - TASK-024: Budget, Contact, and Category repositories implemented in `lib/data/repositories/` (`budget_repository.dart`, `contact_repository.dart`, `category_repository.dart`) backed by `AppDatabase` and pure Dart domain models (`Budget`, `Contact`, `UserCategory`, `CategoryKind`, `CategoryConstants`). All writes and soft-deletes enqueue coalesced outbox pointers atomically. `BudgetRepository` safely handles the unique `userId` constraint, providing `setBudget`, `clearBudget`, and reactive streams. `ContactRepository` implements case-insensitive search and lookups without requiring runtime phone permissions (`S-10`). `CategoryRepository` combines canonical defaults (6 expense, 7 income per DOMAIN_SPEC §9) with custom categories and handles soft deletion. Domain models and all 3 repositories are covered by 33 comprehensive automated tests (123 total project tests passing green).
+  - TASK-025: Outbox queue implemented in `lib/data/sync/outbox.dart` (`OutboxEntry`, `BackoffPolicy`, `OutboxQueue`) backed by Drift SQLite `outbox` table. Pointers (`table_name`, `row_id`, `created_at`, `attempts`, `last_error`) store references instead of stale payloads. Successive writes to the same row coalesce into a single pointer, resetting attempts and clearing errors. Configurable exponential backoff caps at `maxDelay` (5 mins default). Provides FIFO ready filtering (`getReadyEntries`), distinct reactive stream for pending count (`watchPendingCount`), deletion on sync success, tap-to-retry reset (`resetAttempts`), and strict SQLite transaction rollback crash-safety verified by 11 automated unit tests (134 total project tests passing green).
 
 ## In progress
 - Phase 2: Data Layer (Drift SQLite local DB, repositories, outbox sync).
-  - Next: TASK-025: Outbox: enqueue, coalesce, attempts, backoff.
+  - Next: TASK-026: `RemoteGateway` interface + `FakeRemote` + SyncService drain.
 
 ## Next
 
-- TASK-025: Outbox: enqueue, coalesce, attempts, backoff.
 - TASK-026: `RemoteGateway` interface + `FakeRemote` + SyncService drain.
+- TASK-027: Pull with `(updated_at,id)` cursors + tombstone apply.
 
 ## Known issues / risks
 - Web schema to be diffed against proposed schema.

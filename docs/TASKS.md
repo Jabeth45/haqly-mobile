@@ -35,7 +35,7 @@ Every task also meets the gates in TEST_PLAN section 1. "Blocked by" refers to O
 | TASK-022 | [DONE] CheckRepository (+verdict list) | 020, 011 | |
 | TASK-023 | [DONE] LedgerRepository (filters, open summary, settle, split-save) | 020, 015 | Filters All/Lent/Borrowed/Unsettled, settle toggle, open summary, split-save atomically writes lent entries + outbox |
 | TASK-024 | [DONE] Budget, Contact, Category repositories | 020 | |
-| TASK-025 | Outbox: enqueue, coalesce, attempts, backoff | 020 | Unit tests incl. crash-safety |
+| TASK-025 | [DONE] Outbox: enqueue, coalesce, attempts, backoff | 020 | Unit tests incl. crash-safety |
 | TASK-026 | `RemoteGateway` interface + `FakeRemote` + SyncService drain | 025 | Offline, partial failure, retry tests pass |
 | TASK-027 | Pull with `(updated_at,id)` cursors + tombstone apply | 026 | Two-fake-device test (M5, M6 logic) |
 | TASK-028 | Sync triggers: lifecycle, connectivity hint, debounce | 026 | |
