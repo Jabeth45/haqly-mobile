@@ -10,10 +10,10 @@ void main() {
       var callCount = 0;
       final coordinator = SyncTriggerCoordinator(
         onSync: () async => callCount++,
-        debounceDuration: const Duration(milliseconds: 60),
+        debounceDuration: const Duration(milliseconds: 200),
       );
 
-      // 3 rapid calls within 30ms
+      // 3 rapid calls within 30ms (well within 200ms window)
       unawaited(coordinator.requestSync());
       expect(coordinator.hasPendingDebounce, isTrue);
 
@@ -23,16 +23,16 @@ void main() {
       await Future<void>.delayed(const Duration(milliseconds: 15));
       unawaited(coordinator.requestSync());
 
-      // At 30ms, still pending and 0 calls made
+      // At ~30ms, still pending and 0 calls made
       expect(callCount, 0);
       expect(coordinator.hasPendingDebounce, isTrue);
 
-      // Wait 35ms (total 65ms; 35ms after last call) -> still waiting (needs 60ms after last call)
-      await Future<void>.delayed(const Duration(milliseconds: 35));
+      // Wait 80ms (total ~110ms; ~80ms after last call) -> still waiting (needs 200ms after last call)
+      await Future<void>.delayed(const Duration(milliseconds: 80));
       expect(callCount, 0);
 
-      // Wait remaining 35ms (70ms after last call) -> executes exactly once
-      await Future<void>.delayed(const Duration(milliseconds: 35));
+      // Wait remaining 150ms (total ~260ms; > 200ms after last call) -> executes exactly once
+      await Future<void>.delayed(const Duration(milliseconds: 150));
       expect(callCount, 1);
       expect(coordinator.hasPendingDebounce, isFalse);
 
