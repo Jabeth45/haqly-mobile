@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+
 import 'package:drift/drift.dart';
 import 'package:haqly_mobile/core/services/clock.dart';
 import 'package:haqly_mobile/data/db/app_database.dart' as db;
@@ -120,22 +121,21 @@ class OutboxQueue {
   /// Atomically enqueues a pointer for [tableName] and [rowId].
   /// If a pointer already exists for the same table and rowId, coalesces:
   /// updates [createdAt] to now, resets [attempts] to 0, and clears [lastError].
-  Future<int> enqueue(
-    String tableName,
-    String rowId, {
-    DateTime? now,
-  }) async {
+  Future<int> enqueue(String tableName, String rowId, {DateTime? now}) async {
     final nowUtc = (now ?? clock.now()).toUtc();
     final nowUtcIso = nowUtc.toIso8601String();
 
     return _db.transaction(() async {
-      final existing = await (_db.select(_db.outbox)..where(
-            (o) => o.recordTable.equals(tableName) & o.rowId.equals(rowId),
-          ))
-          .getSingleOrNull();
+      final existing =
+          await (_db.select(_db.outbox)..where(
+                (o) => o.recordTable.equals(tableName) & o.rowId.equals(rowId),
+              ))
+              .getSingleOrNull();
 
       if (existing == null) {
-        return _db.into(_db.outbox).insert(
+        return _db
+            .into(_db.outbox)
+            .insert(
               db.OutboxCompanion.insert(
                 recordTable: tableName,
                 rowId: rowId,
@@ -143,8 +143,9 @@ class OutboxQueue {
               ),
             );
       } else {
-        await (_db.update(_db.outbox)..where((o) => o.id.equals(existing.id)))
-            .write(
+        await (_db.update(
+          _db.outbox,
+        )..where((o) => o.id.equals(existing.id))).write(
           db.OutboxCompanion(
             createdAt: Value(nowUtcIso),
             attempts: const Value(0),
@@ -163,13 +164,12 @@ class OutboxQueue {
     required String error,
     DateTime? failedAt,
   }) async {
-    final failTimeUtcIso =
-        (failedAt ?? clock.now()).toUtc().toIso8601String();
+    final failTimeUtcIso = (failedAt ?? clock.now()).toUtc().toIso8601String();
 
     await _db.transaction(() async {
-      final entry = await (_db.select(_db.outbox)
-            ..where((o) => o.id.equals(outboxId)))
-          .getSingleOrNull();
+      final entry = await (_db.select(
+        _db.outbox,
+      )..where((o) => o.id.equals(outboxId))).getSingleOrNull();
 
       if (entry == null) return;
 
@@ -185,18 +185,17 @@ class OutboxQueue {
 
   /// Deletes a successfully synced entry by its primary key [outboxId].
   Future<bool> deleteEntry(int outboxId) async {
-    final deleted = await (_db.delete(_db.outbox)
-          ..where((o) => o.id.equals(outboxId)))
-        .go();
+    final deleted = await (_db.delete(
+      _db.outbox,
+    )..where((o) => o.id.equals(outboxId))).go();
     return deleted > 0;
   }
 
   /// Deletes all outbox entries for a given [tableName] and [rowId].
   Future<int> deleteByRow(String tableName, String rowId) async {
-    return (_db.delete(_db.outbox)
-          ..where(
-            (o) => o.recordTable.equals(tableName) & o.rowId.equals(rowId),
-          ))
+    return (_db.delete(_db.outbox)..where(
+          (o) => o.recordTable.equals(tableName) & o.rowId.equals(rowId),
+        ))
         .go();
   }
 
@@ -207,10 +206,11 @@ class OutboxQueue {
     DateTime? now,
   }) async {
     final currentTime = now ?? clock.now();
-    final rows = await (_db.select(_db.outbox)
-          ..orderBy([(o) => OrderingTerm.asc(o.id)])
-          ..limit(limit))
-        .get();
+    final rows =
+        await (_db.select(_db.outbox)
+              ..orderBy([(o) => OrderingTerm.asc(o.id)])
+              ..limit(limit))
+            .get();
 
     final allEntries = rows.map(_mapToDomain).toList();
     return allEntries
@@ -220,9 +220,9 @@ class OutboxQueue {
 
   /// Retrieves all pending outbox entries ordered by id ASC (FIFO).
   Future<List<OutboxEntry>> getAllEntries() async {
-    final rows = await (_db.select(_db.outbox)
-          ..orderBy([(o) => OrderingTerm.asc(o.id)]))
-        .get();
+    final rows = await (_db.select(
+      _db.outbox,
+    )..orderBy([(o) => OrderingTerm.asc(o.id)])).get();
     return rows.map(_mapToDomain).toList();
   }
 
@@ -238,10 +238,7 @@ class OutboxQueue {
   Stream<int> watchPendingCount() {
     final countExp = _db.outbox.id.count();
     final query = _db.selectOnly(_db.outbox)..addColumns([countExp]);
-    return query
-        .watchSingle()
-        .map((row) => row.read(countExp) ?? 0)
-        .distinct();
+    return query.watchSingle().map((row) => row.read(countExp) ?? 0).distinct();
   }
 
   /// Resets attempts to 0 and clears lastError for all pending outbox entries
