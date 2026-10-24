@@ -39,7 +39,7 @@ Every task also meets the gates in TEST_PLAN section 1. "Blocked by" refers to O
 | TASK-026 | [DONE] `RemoteGateway` interface + `FakeRemote` + SyncService drain | 025 | Offline, partial failure, retry tests pass |
 | TASK-027 | [DONE] Pull with `(updated_at,id)` cursors + tombstone apply | 026 | Two-fake-device test (M5, M6 logic) |
 | TASK-028 | [DONE] Sync triggers: lifecycle, connectivity hint, debounce | 026 | |
-| TASK-029 | Sync state notifier (idle/syncing/offline/error) + pending count | 026 | |
+| TASK-029 | [DONE] Sync state notifier (idle/syncing/offline/error) + pending count | 026 | |
 
 ## Phase 3 — Shell and identity
 | ID | Task | Dep | Acceptance | Blocked by |

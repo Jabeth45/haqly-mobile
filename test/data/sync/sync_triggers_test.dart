@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:haqly_mobile/core/services/connectivity_service.dart';
 import 'package:haqly_mobile/data/sync/sync_triggers.dart';
@@ -38,107 +39,126 @@ void main() {
       coordinator.dispose();
     });
 
-    test('immediate request cancels pending debounce and executes immediately', () async {
-      var callCount = 0;
-      final coordinator = SyncTriggerCoordinator(
-        onSync: () async => callCount++,
-        debounceDuration: const Duration(milliseconds: 100),
-      );
+    test(
+      'immediate request cancels pending debounce and executes immediately',
+      () async {
+        var callCount = 0;
+        final coordinator = SyncTriggerCoordinator(
+          onSync: () async => callCount++,
+          debounceDuration: const Duration(milliseconds: 100),
+        );
 
-      // Debounced request started
-      unawaited(coordinator.requestSync());
-      expect(coordinator.hasPendingDebounce, isTrue);
+        // Debounced request started
+        unawaited(coordinator.requestSync());
+        expect(coordinator.hasPendingDebounce, isTrue);
 
-      await Future<void>.delayed(const Duration(milliseconds: 20));
-      expect(callCount, 0);
+        await Future<void>.delayed(const Duration(milliseconds: 20));
+        expect(callCount, 0);
 
-      // User pulls to refresh or triggers immediate sync
-      await coordinator.requestSync(immediate: true);
+        // User pulls to refresh or triggers immediate sync
+        await coordinator.requestSync(immediate: true);
 
-      // Immediate sync executed, timer cancelled
-      expect(callCount, 1);
-      expect(coordinator.hasPendingDebounce, isFalse);
+        // Immediate sync executed, timer cancelled
+        expect(callCount, 1);
+        expect(coordinator.hasPendingDebounce, isFalse);
 
-      // Elapsing further time does not execute again
-      await Future<void>.delayed(const Duration(milliseconds: 120));
-      expect(callCount, 1);
+        // Elapsing further time does not execute again
+        await Future<void>.delayed(const Duration(milliseconds: 120));
+        expect(callCount, 1);
 
-      coordinator.dispose();
-    });
+        coordinator.dispose();
+      },
+    );
   });
 
   group('TASK-028: SyncTriggerCoordinator - Connectivity Hint Trigger', () {
-    test('transitioning from offline to online triggers immediate sync', () async {
-      var callCount = 0;
-      final fakeConnectivity = FakeConnectivityService(initialConnected: false);
+    test(
+      'transitioning from offline to online triggers immediate sync',
+      () async {
+        var callCount = 0;
+        final fakeConnectivity = FakeConnectivityService(
+          initialConnected: false,
+        );
 
-      final coordinator = SyncTriggerCoordinator(
-        onSync: () async => callCount++,
-        connectivityService: fakeConnectivity,
-      );
+        final coordinator = SyncTriggerCoordinator(
+          onSync: () async => callCount++,
+          connectivityService: fakeConnectivity,
+        );
 
-      expect(callCount, 0);
+        expect(callCount, 0);
 
-      // Reconnect to network
-      fakeConnectivity.setConnected(true);
-      await pumpEventQueue();
+        // Reconnect to network
+        fakeConnectivity.setConnected(true);
+        await pumpEventQueue();
 
-      expect(callCount, 1);
+        expect(callCount, 1);
 
-      coordinator.dispose();
-      fakeConnectivity.dispose();
-    });
+        coordinator.dispose();
+        fakeConnectivity.dispose();
+      },
+    );
 
-    test('transitioning from online to offline does not trigger sync', () async {
-      var callCount = 0;
-      final fakeConnectivity = FakeConnectivityService(initialConnected: true);
+    test(
+      'transitioning from online to offline does not trigger sync',
+      () async {
+        var callCount = 0;
+        final fakeConnectivity = FakeConnectivityService(
+          initialConnected: true,
+        );
 
-      final coordinator = SyncTriggerCoordinator(
-        onSync: () async => callCount++,
-        connectivityService: fakeConnectivity,
-      );
+        final coordinator = SyncTriggerCoordinator(
+          onSync: () async => callCount++,
+          connectivityService: fakeConnectivity,
+        );
 
-      expect(callCount, 0);
+        expect(callCount, 0);
 
-      // Disconnect from network
-      fakeConnectivity.setConnected(false);
-      await pumpEventQueue();
+        // Disconnect from network
+        fakeConnectivity.setConnected(false);
+        await pumpEventQueue();
 
-      expect(callCount, 0);
+        expect(callCount, 0);
 
-      coordinator.dispose();
-      fakeConnectivity.dispose();
-    });
+        coordinator.dispose();
+        fakeConnectivity.dispose();
+      },
+    );
   });
 
-  group('TASK-028: SyncTriggerCoordinator - App Lifecycle & Clean Disposal', () {
-    test('onAppForegrounded triggers immediate sync', () async {
-      var callCount = 0;
-      final coordinator = SyncTriggerCoordinator(
-        onSync: () async => callCount++,
+  group(
+    'TASK-028: SyncTriggerCoordinator - App Lifecycle & Clean Disposal',
+    () {
+      test('onAppForegrounded triggers immediate sync', () async {
+        var callCount = 0;
+        final coordinator = SyncTriggerCoordinator(
+          onSync: () async => callCount++,
+        );
+
+        await coordinator.onAppForegrounded();
+        expect(callCount, 1);
+
+        coordinator.dispose();
+      });
+
+      test(
+        'dispose cancels active timer and prevents subsequent executions',
+        () async {
+          var callCount = 0;
+          final coordinator = SyncTriggerCoordinator(
+            onSync: () async => callCount++,
+            debounceDuration: const Duration(milliseconds: 50),
+          );
+
+          unawaited(coordinator.requestSync());
+          expect(coordinator.hasPendingDebounce, isTrue);
+
+          coordinator.dispose();
+          expect(coordinator.hasPendingDebounce, isFalse);
+
+          await Future<void>.delayed(const Duration(milliseconds: 70));
+          expect(callCount, 0);
+        },
       );
-
-      await coordinator.onAppForegrounded();
-      expect(callCount, 1);
-
-      coordinator.dispose();
-    });
-
-    test('dispose cancels active timer and prevents subsequent executions', () async {
-      var callCount = 0;
-      final coordinator = SyncTriggerCoordinator(
-        onSync: () async => callCount++,
-        debounceDuration: const Duration(milliseconds: 50),
-      );
-
-      unawaited(coordinator.requestSync());
-      expect(coordinator.hasPendingDebounce, isTrue);
-
-      coordinator.dispose();
-      expect(coordinator.hasPendingDebounce, isFalse);
-
-      await Future<void>.delayed(const Duration(milliseconds: 70));
-      expect(callCount, 0);
-    });
-  });
+    },
+  );
 }
