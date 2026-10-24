@@ -1,6 +1,6 @@
 # MEMORY — current state (update at the end of EVERY session)
 
-Last updated: 2026-10-24 by: agent (TASK-027)
+Last updated: 2026-10-24 by: agent (TASK-028)
 
 ## Done
 - Documentation pack created and audited.
@@ -37,15 +37,16 @@ Last updated: 2026-10-24 by: agent (TASK-027)
     - `SyncService` in `lib/data/sync/sync_service.dart` orchestrating `drain()`: builds current payload on the fly from SQLite, halts safely on offline, increments attempts and triggers backoff on partial failure, skips unadopted guest rows (`user_id == 'LOCAL'`), and discards stale pointers.
     - Covered by 11 unit and integration tests across `sync_service_drain_test.dart` and `remote_mappers_test.dart` (145 total project tests passing green).
   - TASK-027: Pull synchronization implemented in `lib/data/sync/pull.dart` (`PullService`, `PullResult`) with cursor tracking in `sync_meta` and remote-to-local companions in `remote_mappers.dart`. Paginates across all 6 tables using composite cursors `(cursor_updated_at, cursor_id)`. Resolves conflicts against local pending outbox edits (newer local edit preserved; remote newer/equal overwrites). Soft-delete tombstones (`deleted_at`) applied locally. Acceptance verified with 6 automated tests in `pull_test.dart` and `two_device_sync_test.dart` passing scenarios M5 (concurrent offline edits on two devices resolved by newer timestamp without duplicates) and M6 (tombstone propagation across devices) with 151 total project tests green.
+  - TASK-028: Sync triggers implemented in `lib/data/sync/sync_triggers.dart` (`SyncTriggerCoordinator`) with `ConnectivityService` abstraction in `lib/core/services/connectivity_service.dart`. Coordinates local write debouncing (~2s window), immediate sync triggers (`requestSync(immediate: true)`), app lifecycle resume (`onAppForegrounded()`), connectivity hint transitions (offline-to-online recovery), re-entrancy protection, and clean resource cancellation. Verified with 6 automated tests in `sync_triggers_test.dart` (157 total project tests green).
 
 ## In progress
 - Phase 2: Data Layer (Drift SQLite local DB, repositories, outbox sync).
-  - Next: TASK-028: Sync triggers: lifecycle, connectivity hint, debounce.
+  - Next: TASK-029: Sync state notifier (idle/syncing/offline/error) + pending count.
 
 ## Next
 
-- TASK-028: Sync triggers: lifecycle, connectivity hint, debounce.
 - TASK-029: Sync state notifier (idle/syncing/offline/error) + pending count.
+- Phase 3: Shell and identity (TASK-030).
 
 ## Known issues / risks
 - Web schema to be diffed against proposed schema.
