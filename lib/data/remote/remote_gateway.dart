@@ -33,4 +33,13 @@ abstract class RemoteGateway {
     String tableName,
     List<Map<String, dynamic>> payloads,
   );
+
+  /// Pulls a page of records updated since [cursorUpdatedAt] and [cursorId] for [tableName],
+  /// ordered by `updated_at ASC, id ASC`.
+  Future<List<Map<String, dynamic>>> pull(
+    String tableName, {
+    String? cursorUpdatedAt,
+    String? cursorId,
+    int limit = 500,
+  });
 }

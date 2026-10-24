@@ -1,3 +1,4 @@
+import 'package:drift/drift.dart';
 import 'package:haqly_mobile/data/db/app_database.dart';
 
 /// Converts Drift database rows into Supabase remote JSON payloads.
@@ -108,5 +109,119 @@ abstract final class RemoteMappers {
       'client_updated_at': row.clientUpdatedAt,
       'deleted_at': row.deletedAt,
     };
+  }
+
+  /// Maps remote payload to local [ExpensesCompanion].
+  static ExpensesCompanion expenseFromRemote(Map<String, dynamic> remote) {
+    return ExpensesCompanion(
+      id: Value(remote['id'] as String),
+      userId: Value(remote['user_id'] as String),
+      name: Value(remote['name'] as String),
+      amountMinor: Value(decimalToMinor(remote['amount'] as num)),
+      category: Value(remote['category'] as String? ?? 'Other'),
+      type: Value(remote['type'] as String? ?? 'expense'),
+      localDate: Value(remote['local_date'] as String),
+      createdAt: Value(remote['created_at'] as String),
+      clientUpdatedAt: Value(remote['client_updated_at'] as String),
+      deletedAt: Value(remote['deleted_at'] as String?),
+    );
+  }
+
+  /// Maps remote payload to local [CheckItemsCompanion].
+  static CheckItemsCompanion checkItemFromRemote(Map<String, dynamic> remote) {
+    return CheckItemsCompanion(
+      id: Value(remote['id'] as String),
+      userId: Value(remote['user_id'] as String),
+      name: Value(remote['name'] as String),
+      priceMinor: Value(decimalToMinor(remote['price'] as num)),
+      uses: Value((remote['uses'] as num).toDouble()),
+      costPerUseMinor: Value(
+        remote['cost_per_use'] != null
+            ? decimalToMinor(remote['cost_per_use'] as num)
+            : null,
+      ),
+      verdict: Value(remote['verdict'] as String),
+      regretLevel: Value((remote['regret_level'] as num).toInt()),
+      localDate: Value(remote['local_date'] as String),
+      createdAt: Value(remote['created_at'] as String),
+      clientUpdatedAt: Value(remote['client_updated_at'] as String),
+      deletedAt: Value(remote['deleted_at'] as String?),
+    );
+  }
+
+  /// Maps remote payload to local [LedgerEntriesCompanion].
+  static LedgerEntriesCompanion ledgerEntryFromRemote(
+    Map<String, dynamic> remote,
+  ) {
+    return LedgerEntriesCompanion(
+      id: Value(remote['id'] as String),
+      userId: Value(remote['user_id'] as String),
+      person: Value(remote['person'] as String),
+      amountMinor: Value(decimalToMinor(remote['amount'] as num)),
+      currency: Value(remote['currency'] as String? ?? 'ETB'),
+      type: Value(remote['type'] as String),
+      note: Value(remote['note'] as String?),
+      settled: Value(remote['settled'] as bool? ?? false),
+      localDate: Value(remote['local_date'] as String),
+      createdAt: Value(remote['created_at'] as String),
+      clientUpdatedAt: Value(remote['client_updated_at'] as String),
+      deletedAt: Value(remote['deleted_at'] as String?),
+    );
+  }
+
+  /// Maps remote payload to local [BudgetsCompanion].
+  static BudgetsCompanion budgetFromRemote(Map<String, dynamic> remote) {
+    return BudgetsCompanion(
+      id: Value(remote['id'] as String),
+      userId: Value(remote['user_id'] as String),
+      monthlyMinor: Value(
+        remote['monthly_budget'] != null
+            ? decimalToMinor(remote['monthly_budget'] as num)
+            : null,
+      ),
+      weeklyMinor: Value(
+        remote['weekly_budget'] != null
+            ? decimalToMinor(remote['weekly_budget'] as num)
+            : null,
+      ),
+      updatedAt: Value(
+        remote['updated_at'] as String? ??
+            remote['client_updated_at'] as String? ??
+            DateTime.now().toUtc().toIso8601String(),
+      ),
+      clientUpdatedAt: Value(
+        remote['client_updated_at'] as String? ??
+            DateTime.now().toUtc().toIso8601String(),
+      ),
+    );
+  }
+
+  /// Maps remote payload to local [ContactsCompanion].
+  static ContactsCompanion contactFromRemote(Map<String, dynamic> remote) {
+    return ContactsCompanion(
+      id: Value(remote['id'] as String),
+      userId: Value(remote['user_id'] as String),
+      name: Value(remote['name'] as String),
+      phone: Value(remote['phone'] as String?),
+      note: Value(remote['note'] as String?),
+      createdAt: Value(remote['created_at'] as String),
+      clientUpdatedAt: Value(remote['client_updated_at'] as String),
+      deletedAt: Value(remote['deleted_at'] as String?),
+    );
+  }
+
+  /// Maps remote payload to local [UserCategoriesCompanion].
+  static UserCategoriesCompanion userCategoryFromRemote(
+    Map<String, dynamic> remote,
+  ) {
+    return UserCategoriesCompanion(
+      id: Value(remote['id'] as String),
+      userId: Value(remote['user_id'] as String),
+      name: Value(remote['name'] as String),
+      kind: Value(remote['kind'] as String),
+      createdAt: Value(remote['created_at'] as String),
+      clientUpdatedAt: Value(remote['client_updated_at'] as String),
+      deletedAt: Value(remote['deleted_at'] as String?),
+    );
   }
 }
