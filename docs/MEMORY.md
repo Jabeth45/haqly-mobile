@@ -1,6 +1,6 @@
 # MEMORY — current state (update at the end of EVERY session)
 
-Last updated: 2026-10-25 by: agent (TASK-033)
+Last updated: 2026-10-25 by: agent (TASK-034)
 
 ## Done
 - Documentation pack created and audited.
@@ -62,14 +62,21 @@ Last updated: 2026-10-25 by: agent (TASK-033)
     - `LoginScreen`, `RegisterScreen`, and `OtpVerifyScreen` built with bilingual ARB keys (English and Amharic).
     - Router updated with `/login`, `/register`, and `/verify-otp` outside the bottom navigation bar.
     - Covered by 8 automated tests in `auth_repository_test.dart` and `email_auth_test.dart` (189 total project tests green).
+  - TASK-034: Forgot password flow with recovery OTP implemented:
+    - Added `sendPasswordResetEmail` and `resetPasswordWithOtp` to `AuthRepository` and `SupabaseAuthRepository` with enumeration-resistant generic success responses.
+    - Extended `AuthNotifier` with recovery actions.
+    - Built `ForgotPasswordScreen` with two-step recovery flow (email dispatch -> 6-digit OTP verification + new password update).
+    - Linked from `LoginScreen` and routed at `/forgot-password`.
+    - Added localized strings in English and Amharic.
+    - Verified by 3 tests in `auth_repository_test.dart` and `forgot_password_test.dart` (192 total project tests green).
 
 ## In progress
 - Phase 3: Shell and identity.
-  - Next: TASK-034: Forgot password flow.
+  - Next: TASK-035: Anonymous sign-in + adopt (idempotent).
 
 ## Next
 
-- TASK-034: Forgot password flow.
+- TASK-035: Anonymous sign-in + adopt (idempotent).
 
 ## Known issues / risks
 - Web schema to be diffed against proposed schema.

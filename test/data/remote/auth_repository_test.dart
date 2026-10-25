@@ -91,4 +91,85 @@ void main() {
       },
     );
   });
+
+  group('TASK-034: Password Recovery Flow (FR-A5)', () {
+    late FakeAuthRepository authRepo;
+
+    setUp(() async {
+      authRepo = FakeAuthRepository();
+      // Register and verify a user
+      await authRepo.signUpWithEmail(
+        email: 'recover@haqly.app',
+        password: 'oldPassword123',
+      );
+      await authRepo.verifyEmailOtp(
+        email: 'recover@haqly.app',
+        token: '123456',
+      );
+      await authRepo.signOut();
+    });
+
+    test(
+      'sendPasswordResetEmail succeeds without exposing user existence',
+      () async {
+        final res = await authRepo.sendPasswordResetEmail(
+          email: 'recover@haqly.app',
+        );
+        expect(res.isSuccess, isTrue);
+
+        final unregRes = await authRepo.sendPasswordResetEmail(
+          email: 'unknown@haqly.app',
+        );
+        expect(unregRes.isSuccess, isTrue);
+      },
+    );
+
+    test(
+      'resetPasswordWithOtp requires valid token and min 6 char password',
+      () async {
+        await authRepo.sendPasswordResetEmail(email: 'recover@haqly.app');
+
+        // Invalid token
+        final badToken = await authRepo.resetPasswordWithOtp(
+          email: 'recover@haqly.app',
+          token: '999999',
+          newPassword: 'newPassword456',
+        );
+        expect(badToken.isSuccess, isFalse);
+        expect(badToken.errorMessage, contains('Invalid or expired'));
+
+        // Short password
+        final shortPass = await authRepo.resetPasswordWithOtp(
+          email: 'recover@haqly.app',
+          token: '123456',
+          newPassword: '123',
+        );
+        expect(shortPass.isSuccess, isFalse);
+        expect(shortPass.errorMessage, contains('at least 6 characters'));
+
+        // Valid reset
+        final success = await authRepo.resetPasswordWithOtp(
+          email: 'recover@haqly.app',
+          token: '123456',
+          newPassword: 'newPassword456',
+        );
+        expect(success.isSuccess, isTrue);
+
+        // Old password no longer works
+        final oldLogin = await authRepo.signInWithEmail(
+          email: 'recover@haqly.app',
+          password: 'oldPassword123',
+        );
+        expect(oldLogin.isSuccess, isFalse);
+
+        // New password works
+        final newLogin = await authRepo.signInWithEmail(
+          email: 'recover@haqly.app',
+          password: 'newPassword456',
+        );
+        expect(newLogin.isSuccess, isTrue);
+        expect(authRepo.isAuthenticated, isTrue);
+      },
+    );
+  });
 }

@@ -17,7 +17,7 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
 });
 
 /// Riverpod notifier managing identity, guest sentinel, and session restore.
-/// Follows docs/ARCHITECTURE.md Section 7 and PRD FR-A1 / FR-A3 / FR-A6.
+/// Follows docs/ARCHITECTURE.md Section 7 and PRD FR-A1 / FR-A3 / FR-A5 / FR-A6.
 class AuthNotifier extends Notifier<AuthState> {
   @override
   AuthState build() {
@@ -122,6 +122,26 @@ class AuthNotifier extends Notifier<AuthState> {
   Future<AuthResult> resendOtp({required String email}) async {
     final authRepo = ref.read(authRepositoryProvider);
     return authRepo.resendOtp(email: email);
+  }
+
+  /// Sends a password recovery OTP to the given email address.
+  Future<AuthResult> sendPasswordResetEmail({required String email}) async {
+    final authRepo = ref.read(authRepositoryProvider);
+    return authRepo.sendPasswordResetEmail(email: email);
+  }
+
+  /// Verifies password recovery OTP and updates the account password.
+  Future<AuthResult> resetPasswordWithOtp({
+    required String email,
+    required String token,
+    required String newPassword,
+  }) async {
+    final authRepo = ref.read(authRepositoryProvider);
+    return authRepo.resetPasswordWithOtp(
+      email: email,
+      token: token,
+      newPassword: newPassword,
+    );
   }
 
   /// Signs out and resets session state.

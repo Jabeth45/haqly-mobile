@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:haqly_mobile/app/scaffold_with_nav_bar.dart';
 import 'package:haqly_mobile/domain/models/auth_state.dart';
+import 'package:haqly_mobile/features/auth/presentation/forgot_password_screen.dart';
 import 'package:haqly_mobile/features/auth/presentation/login_screen.dart';
 import 'package:haqly_mobile/features/auth/presentation/otp_verify_screen.dart';
 import 'package:haqly_mobile/features/auth/presentation/register_screen.dart';
@@ -19,7 +20,7 @@ final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>(
 
 /// Builds the app's declarative [GoRouter] configuration.
 /// Uses [StatefulShellRoute.indexedStack] to maintain widget state across the 5 bottom tabs.
-/// Implements auth redirect guards per docs/ARCHITECTURE.md Section 7, FR-A1, and FR-A6.
+/// Implements auth redirect guards per docs/ARCHITECTURE.md Section 7, FR-A1, FR-A5, and FR-A6.
 GoRouter createAppRouter({
   String initialLocation = '/home',
   List<NavigatorObserver>? observers,
@@ -47,6 +48,7 @@ GoRouter createAppRouter({
           state.matchedLocation == '/welcome' ||
           state.matchedLocation == '/login' ||
           state.matchedLocation == '/register' ||
+          state.matchedLocation == '/forgot-password' ||
           state.matchedLocation.startsWith('/verify-otp');
 
       // 2. Active session (guest sentinel or authenticated account)
@@ -132,6 +134,11 @@ GoRouter createAppRouter({
         path: '/register',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => const RegisterScreen(),
+      ),
+      GoRoute(
+        path: '/forgot-password',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const ForgotPasswordScreen(),
       ),
       GoRoute(
         path: '/verify-otp',

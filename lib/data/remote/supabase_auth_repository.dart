@@ -3,7 +3,7 @@ import 'package:haqly_mobile/domain/models/auth_result.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as supa;
 
 /// Supabase implementation of [AuthRepository].
-/// Follows docs/ARCHITECTURE.md Section 6 and docs/SECURITY.md Section 3.
+/// Follows docs/ARCHITECTURE.md Section 6, docs/SECURITY.md Section 3, and PRD FR-A5.
 class SupabaseAuthRepository implements AuthRepository {
   SupabaseAuthRepository({this.clientOverride});
 
@@ -110,6 +110,45 @@ class SupabaseAuthRepository implements AuthRepository {
       return AuthResult.failure(_mapAuthError(e.message));
     } catch (_) {
       return const AuthResult.failure('Unable to resend verification code.');
+    }
+  }
+
+  @override
+  Future<AuthResult> sendPasswordResetEmail({required String email}) async {
+    try {
+      await client.auth.resetPasswordForEmail(email.trim());
+      return const AuthResult.success();
+    } on supa.AuthException catch (e) {
+      return AuthResult.failure(_mapAuthError(e.message));
+    } catch (_) {
+      return const AuthResult.failure('Unable to send password reset code.');
+    }
+  }
+
+  @override
+  Future<AuthResult> resetPasswordWithOtp({
+    required String email,
+    required String token,
+    required String newPassword,
+  }) async {
+    try {
+      final verifyRes = await client.auth.verifyOTP(
+        email: email.trim(),
+        token: token.trim(),
+        type: supa.OtpType.recovery,
+      );
+
+      if (verifyRes.user == null) {
+        return const AuthResult.failure('Invalid or expired reset code.');
+      }
+
+      await client.auth.updateUser(supa.UserAttributes(password: newPassword));
+
+      return const AuthResult.success();
+    } on supa.AuthException catch (e) {
+      return AuthResult.failure(_mapAuthError(e.message));
+    } catch (_) {
+      return const AuthResult.failure('Unable to update password.');
     }
   }
 

@@ -48,7 +48,7 @@ Every task also meets the gates in TEST_PLAN section 1. "Blocked by" refers to O
 | TASK-031 | [DONE] Local guest + boot/restore (LOCAL sentinel), no flash of auth | 020, 030 | M1 passes (data layer only) | Completed |
 | TASK-032 | [DONE] Supabase init from `--dart-define-from-file`; session in secure storage | 002 | Session survives restart; not in plain prefs | Completed |
 | TASK-033 | [DONE] Email sign up/in + OTP verify | 032 | FR-A1 | Completed |
-| TASK-034 | Forgot password flow | 033 | FR-A5 | |
+| TASK-034 | [DONE] Forgot password flow | 033 | FR-A5 | Completed |
 | TASK-035 | Anonymous sign-in + adopt (idempotent) | 031, 032 | M3 first half; adopt twice = no change | BK-005, OPEN-008 |
 | TASK-036 | Upgrade (link email/Google) + existing-account choice | 035 | M3, M4 | |
 | TASK-037 | Google sign-in | 036 | FR-A2 | OPEN-014 for iOS |

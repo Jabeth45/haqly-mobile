@@ -25,5 +25,10 @@
   "enterOtpPrompt": "ወደ ኢሜይልዎ የተላከውን ባለ 6-አሃዝ የማረጋገጫ ኮድ ያስገቡ።",
   "dontHaveAccount": "መለያ የለዎትም? ይመዝገቡ",
   "alreadyHaveAccount": "ቀደም ሲል መለያ አለዎት? ይግቡ",
-  "resendCode": "ኮድ ደግመህ ላክ"
+  "resendCode": "ኮድ ደግመህ ላክ",
+  "forgotPassword": "የይለፍ ቃል ረሱ?",
+  "resetPassword": "የይለፍ ቃል ይቀይሩ",
+  "sendResetCode": "የማረጋገጫ ኮድ ላክ",
+  "newPassword": "አዲስ የይለፍ ቃል",
+  "passwordResetSuccess": "የይለፍ ቃል በተሳካ ሁኔታ ተቀይሯል። አሁን መግባት ይችላሉ።"
 }

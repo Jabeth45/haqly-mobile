@@ -103,5 +103,25 @@
   "resendCode": "Resend Code",
   "@resendCode": {
     "description": "Resend verification code action"
+  },
+  "forgotPassword": "Forgot Password?",
+  "@forgotPassword": {
+    "description": "Forgot password button/link"
+  },
+  "resetPassword": "Reset Password",
+  "@resetPassword": {
+    "description": "Reset password screen title and button"
+  },
+  "sendResetCode": "Send Reset Code",
+  "@sendResetCode": {
+    "description": "Send password reset code action"
+  },
+  "newPassword": "New Password",
+  "@newPassword": {
+    "description": "New password input label"
+  },
+  "passwordResetSuccess": "Password reset successfully. You can now sign in.",
+  "@passwordResetSuccess": {
+    "description": "Password reset success confirmation"
   }
 }

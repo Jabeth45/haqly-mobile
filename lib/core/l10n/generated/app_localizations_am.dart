@@ -86,4 +86,19 @@ class AppLocalizationsAm extends AppLocalizations {
 
   @override
   String get resendCode => 'ኮድ ደግመህ ላክ';
+
+  @override
+  String get forgotPassword => 'የይለፍ ቃል ረሱ?';
+
+  @override
+  String get resetPassword => 'የይለፍ ቃል ይቀይሩ';
+
+  @override
+  String get sendResetCode => 'የማረጋገጫ ኮድ ላክ';
+
+  @override
+  String get newPassword => 'አዲስ የይለፍ ቃል';
+
+  @override
+  String get passwordResetSuccess => 'የይለፍ ቃል በተሳካ ሁኔታ ተቀይሯል። አሁን መግባት ይችላሉ።';
 }

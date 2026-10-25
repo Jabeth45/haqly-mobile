@@ -1,7 +1,7 @@
 import 'package:haqly_mobile/domain/models/auth_result.dart';
 
 /// Contract for remote authentication operations.
-/// Follows docs/ARCHITECTURE.md Section 6, docs/SECURITY.md S-04, and PRD FR-A1.
+/// Follows docs/ARCHITECTURE.md Section 6, docs/SECURITY.md S-04, and PRD FR-A1 / FR-A5.
 abstract class AuthRepository {
   /// Signs up a new account using email and password.
   Future<AuthResult> signUpWithEmail({
@@ -23,6 +23,16 @@ abstract class AuthRepository {
 
   /// Resends an OTP verification token.
   Future<AuthResult> resendOtp({required String email});
+
+  /// Sends a password recovery OTP to the given email address.
+  Future<AuthResult> sendPasswordResetEmail({required String email});
+
+  /// Verifies password recovery OTP and updates the account password.
+  Future<AuthResult> resetPasswordWithOtp({
+    required String email,
+    required String token,
+    required String newPassword,
+  });
 
   /// Signs out of the active account.
   Future<void> signOut();
@@ -49,6 +59,7 @@ class FakeAuthRepository implements AuthRepository {
 
   final Map<String, String> _registeredUsers = {};
   final Map<String, String> _pendingOtps = {};
+  final Map<String, String> _pendingRecoveryOtps = {};
 
   String? _currentUserId;
   String? _currentUserEmail;
@@ -139,10 +150,44 @@ class FakeAuthRepository implements AuthRepository {
   Future<AuthResult> resendOtp({required String email}) async {
     final normalized = email.toLowerCase();
     if (!_registeredUsers.containsKey(normalized)) {
-      // Return success to prevent enumeration
       return const AuthResult.success();
     }
     _pendingOtps[normalized] = fixedOtp;
+    return const AuthResult.success();
+  }
+
+  @override
+  Future<AuthResult> sendPasswordResetEmail({required String email}) async {
+    final normalized = email.toLowerCase();
+    // Return success regardless of whether email exists to prevent enumeration
+    if (_registeredUsers.containsKey(normalized)) {
+      _pendingRecoveryOtps[normalized] = fixedOtp;
+    }
+    return const AuthResult.success();
+  }
+
+  @override
+  Future<AuthResult> resetPasswordWithOtp({
+    required String email,
+    required String token,
+    required String newPassword,
+  }) async {
+    final normalized = email.toLowerCase();
+    final expected = _pendingRecoveryOtps[normalized];
+
+    if (expected == null || expected != token.trim()) {
+      return const AuthResult.failure('Invalid or expired reset code.');
+    }
+
+    if (newPassword.length < 6) {
+      return const AuthResult.failure(
+        'Password must be at least 6 characters.',
+      );
+    }
+
+    _registeredUsers[normalized] = newPassword;
+    _pendingRecoveryOtps.remove(normalized);
+
     return const AuthResult.success();
   }
 

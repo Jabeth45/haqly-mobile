@@ -88,4 +88,20 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get resendCode => 'Resend Code';
+
+  @override
+  String get forgotPassword => 'Forgot Password?';
+
+  @override
+  String get resetPassword => 'Reset Password';
+
+  @override
+  String get sendResetCode => 'Send Reset Code';
+
+  @override
+  String get newPassword => 'New Password';
+
+  @override
+  String get passwordResetSuccess =>
+      'Password reset successfully. You can now sign in.';
 }
