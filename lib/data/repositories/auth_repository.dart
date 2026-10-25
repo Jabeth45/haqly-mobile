@@ -15,6 +15,9 @@ abstract class AuthRepository {
     required String password,
   });
 
+  /// Signs in anonymously to obtain a stable cloud user identifier.
+  Future<AuthResult> signInAnonymously();
+
   /// Verifies email verification OTP token.
   Future<AuthResult> verifyEmailOtp({
     required String email,
@@ -76,6 +79,15 @@ class FakeAuthRepository implements AuthRepository {
 
   @override
   bool get isAuthenticated => _isAuthenticated;
+
+  @override
+  Future<AuthResult> signInAnonymously() async {
+    _currentUserId = 'anon_${DateTime.now().millisecondsSinceEpoch}';
+    _currentUserEmail = null;
+    _isAuthenticated = true;
+
+    return AuthResult.success(userId: _currentUserId);
+  }
 
   @override
   Future<AuthResult> signUpWithEmail({
@@ -159,7 +171,6 @@ class FakeAuthRepository implements AuthRepository {
   @override
   Future<AuthResult> sendPasswordResetEmail({required String email}) async {
     final normalized = email.toLowerCase();
-    // Return success regardless of whether email exists to prevent enumeration
     if (_registeredUsers.containsKey(normalized)) {
       _pendingRecoveryOtps[normalized] = fixedOtp;
     }

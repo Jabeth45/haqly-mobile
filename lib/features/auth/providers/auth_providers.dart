@@ -17,7 +17,7 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
 });
 
 /// Riverpod notifier managing identity, guest sentinel, and session restore.
-/// Follows docs/ARCHITECTURE.md Section 7 and PRD FR-A1 / FR-A3 / FR-A5 / FR-A6.
+/// Follows docs/ARCHITECTURE.md Section 7 and PRD FR-A1 / FR-A3 / FR-A4 / FR-A5 / FR-A6.
 class AuthNotifier extends Notifier<AuthState> {
   @override
   AuthState build() {
@@ -42,6 +42,31 @@ class AuthNotifier extends Notifier<AuthState> {
     final sessionRepo = ref.read(sessionRepositoryProvider);
     await sessionRepo.setGuestMode();
     state = const AuthState.guest();
+  }
+
+  /// Signs in anonymously to obtain a stable cloud identifier and adopts
+  /// any existing LOCAL guest records.
+  Future<AuthResult> signInAnonymously({
+    Future<void> Function(String newUserId)? onAdopt,
+  }) async {
+    final authRepo = ref.read(authRepositoryProvider);
+    final result = await authRepo.signInAnonymously();
+
+    if (result.isSuccess && result.userId != null) {
+      if (onAdopt != null) {
+        await onAdopt(result.userId!);
+      }
+      final sessionRepo = ref.read(sessionRepositoryProvider);
+      await sessionRepo.setAuthenticatedUser(
+        userId: result.userId!,
+        email: result.email,
+      );
+      state = AuthState.authenticated(
+        userId: result.userId!,
+        email: result.email,
+      );
+    }
+    return result;
   }
 
   /// Registers a new user with email and password.

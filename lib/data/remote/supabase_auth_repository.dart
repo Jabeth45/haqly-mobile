@@ -3,7 +3,7 @@ import 'package:haqly_mobile/domain/models/auth_result.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as supa;
 
 /// Supabase implementation of [AuthRepository].
-/// Follows docs/ARCHITECTURE.md Section 6, docs/SECURITY.md Section 3, and PRD FR-A5.
+/// Follows docs/ARCHITECTURE.md Section 6, docs/SECURITY.md Section 3, and PRD FR-A1 / FR-A5.
 class SupabaseAuthRepository implements AuthRepository {
   SupabaseAuthRepository({this.clientOverride});
 
@@ -20,6 +20,24 @@ class SupabaseAuthRepository implements AuthRepository {
 
   @override
   bool get isAuthenticated => client.auth.currentSession != null;
+
+  @override
+  Future<AuthResult> signInAnonymously() async {
+    try {
+      final res = await client.auth.signInAnonymously();
+      final user = res.user;
+
+      if (user == null) {
+        return const AuthResult.failure('Unable to sign in anonymously.');
+      }
+
+      return AuthResult.success(userId: user.id, email: user.email);
+    } on supa.AuthException catch (e) {
+      return AuthResult.failure(_mapAuthError(e.message));
+    } catch (_) {
+      return const AuthResult.failure('Network or authentication error.');
+    }
+  }
 
   @override
   Future<AuthResult> signUpWithEmail({
