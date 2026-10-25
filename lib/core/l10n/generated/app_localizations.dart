@@ -193,6 +193,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Track expenses, check value, and manage debt offline.'**
   String get welcomeTagline;
+
+  /// Sign in button/title
+  ///
+  /// In en, this message translates to:
+  /// **'Sign In'**
+  String get signIn;
+
+  /// Sign up button/title
+  ///
+  /// In en, this message translates to:
+  /// **'Sign Up'**
+  String get signUp;
+
+  /// Email input label
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
+  String get email;
+
+  /// Password input label
+  ///
+  /// In en, this message translates to:
+  /// **'Password'**
+  String get password;
+
+  /// Verify email title
+  ///
+  /// In en, this message translates to:
+  /// **'Verify Email'**
+  String get verifyEmail;
+
+  /// OTP code input label
+  ///
+  /// In en, this message translates to:
+  /// **'Verification Code'**
+  String get otpCode;
+
+  /// OTP prompt description
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the 6-digit verification code sent to your email.'**
+  String get enterOtpPrompt;
+
+  /// Prompt to switch to sign up
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t have an account? Sign Up'**
+  String get dontHaveAccount;
+
+  /// Prompt to switch to sign in
+  ///
+  /// In en, this message translates to:
+  /// **'Already have an account? Sign In'**
+  String get alreadyHaveAccount;
+
+  /// Resend verification code action
+  ///
+  /// In en, this message translates to:
+  /// **'Resend Code'**
+  String get resendCode;
 }
 
 class _AppLocalizationsDelegate

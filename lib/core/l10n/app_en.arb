@@ -63,5 +63,45 @@
   "welcomeTagline": "Track expenses, check value, and manage debt offline.",
   "@welcomeTagline": {
     "description": "Welcome screen tagline"
+  },
+  "signIn": "Sign In",
+  "@signIn": {
+    "description": "Sign in button/title"
+  },
+  "signUp": "Sign Up",
+  "@signUp": {
+    "description": "Sign up button/title"
+  },
+  "email": "Email",
+  "@email": {
+    "description": "Email input label"
+  },
+  "password": "Password",
+  "@password": {
+    "description": "Password input label"
+  },
+  "verifyEmail": "Verify Email",
+  "@verifyEmail": {
+    "description": "Verify email title"
+  },
+  "otpCode": "Verification Code",
+  "@otpCode": {
+    "description": "OTP code input label"
+  },
+  "enterOtpPrompt": "Enter the 6-digit verification code sent to your email.",
+  "@enterOtpPrompt": {
+    "description": "OTP prompt description"
+  },
+  "dontHaveAccount": "Don't have an account? Sign Up",
+  "@dontHaveAccount": {
+    "description": "Prompt to switch to sign up"
+  },
+  "alreadyHaveAccount": "Already have an account? Sign In",
+  "@alreadyHaveAccount": {
+    "description": "Prompt to switch to sign in"
+  },
+  "resendCode": "Resend Code",
+  "@resendCode": {
+    "description": "Resend verification code action"
   }
 }

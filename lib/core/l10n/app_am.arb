@@ -15,5 +15,15 @@
   "continueAsGuest": "እንደ እንግዳ ቀጥል",
   "welcomeTitle": "ሀቅሊ",
   "welcomeSubtitle": "የኢትዮጵያ ስማርት የግል ፋይናንስ ረዳት",
-  "welcomeTagline": "ወጪዎችን ይቆጣጠሩ፣ የግዢዎችን ዋጋ ይመዝኑ።"
+  "welcomeTagline": "ወጪዎችን ይቆጣጠሩ፣ የግዢዎችን ዋጋ ይመዝኑ።",
+  "signIn": "ግባ",
+  "signUp": "ይመዝገቡ",
+  "email": "ኢሜይል",
+  "password": "የይለፍ ቃል",
+  "verifyEmail": "ኢሜይልዎን ያረጋግጡ",
+  "otpCode": "የማረጋገጫ ኮድ",
+  "enterOtpPrompt": "ወደ ኢሜይልዎ የተላከውን ባለ 6-አሃዝ የማረጋገጫ ኮድ ያስገቡ።",
+  "dontHaveAccount": "መለያ የለዎትም? ይመዝገቡ",
+  "alreadyHaveAccount": "ቀደም ሲል መለያ አለዎት? ይግቡ",
+  "resendCode": "ኮድ ደግመህ ላክ"
 }

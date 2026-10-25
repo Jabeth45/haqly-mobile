@@ -1,6 +1,6 @@
 # MEMORY — current state (update at the end of EVERY session)
 
-Last updated: 2026-10-25 by: agent (TASK-032)
+Last updated: 2026-10-25 by: agent (TASK-033)
 
 ## Done
 - Documentation pack created and audited.
@@ -54,14 +54,22 @@ Last updated: 2026-10-25 by: agent (TASK-032)
     - Supabase bootstrap in `lib/data/remote/supabase_client.dart` with auto-refresh and PKCE flow storage.
     - `main.dart` decoupled from Supabase internals via data/remote facade.
     - Verified by 7 tests in `secure_local_storage_test.dart` and `app_config_test.dart` (181 total project tests green).
+  - TASK-033: Email sign up/in and OTP verification implemented:
+    - Pure Dart `AuthResult` domain model in `lib/domain/models/auth_result.dart`.
+    - `AuthRepository` interface and `FakeAuthRepository` in `lib/data/repositories/auth_repository.dart` for test isolation.
+    - `SupabaseAuthRepository` in `lib/data/remote/supabase_auth_repository.dart` handling email registration, password login, OTP verification, and generic error mapping (SECURITY.md §3).
+    - `AuthNotifier` updated with `signUpWithEmail`, `signInWithEmail`, and `verifyOtp` methods that persist authenticated sessions into `SessionRepository`.
+    - `LoginScreen`, `RegisterScreen`, and `OtpVerifyScreen` built with bilingual ARB keys (English and Amharic).
+    - Router updated with `/login`, `/register`, and `/verify-otp` outside the bottom navigation bar.
+    - Covered by 8 automated tests in `auth_repository_test.dart` and `email_auth_test.dart` (189 total project tests green).
 
 ## In progress
 - Phase 3: Shell and identity.
-  - Next: TASK-033: Email sign up/in + OTP verify.
+  - Next: TASK-034: Forgot password flow.
 
 ## Next
 
-- TASK-033: Email sign up/in + OTP verify.
+- TASK-034: Forgot password flow.
 
 ## Known issues / risks
 - Web schema to be diffed against proposed schema.

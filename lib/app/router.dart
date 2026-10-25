@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:haqly_mobile/app/scaffold_with_nav_bar.dart';
 import 'package:haqly_mobile/domain/models/auth_state.dart';
+import 'package:haqly_mobile/features/auth/presentation/login_screen.dart';
+import 'package:haqly_mobile/features/auth/presentation/otp_verify_screen.dart';
+import 'package:haqly_mobile/features/auth/presentation/register_screen.dart';
 import 'package:haqly_mobile/features/check/presentation/check_screen.dart';
 import 'package:haqly_mobile/features/expense/presentation/add_screen.dart';
 import 'package:haqly_mobile/features/history/presentation/history_screen.dart';
@@ -16,7 +19,7 @@ final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>(
 
 /// Builds the app's declarative [GoRouter] configuration.
 /// Uses [StatefulShellRoute.indexedStack] to maintain widget state across the 5 bottom tabs.
-/// Implements auth redirect guards per docs/ARCHITECTURE.md Section 7 and FR-A6.
+/// Implements auth redirect guards per docs/ARCHITECTURE.md Section 7, FR-A1, and FR-A6.
 GoRouter createAppRouter({
   String initialLocation = '/home',
   List<NavigatorObserver>? observers,
@@ -40,18 +43,22 @@ GoRouter createAppRouter({
         return null;
       }
 
-      final isAtWelcome = state.matchedLocation == '/welcome';
+      final isAuthRoute =
+          state.matchedLocation == '/welcome' ||
+          state.matchedLocation == '/login' ||
+          state.matchedLocation == '/register' ||
+          state.matchedLocation.startsWith('/verify-otp');
 
       // 2. Active session (guest sentinel or authenticated account)
       if (auth.hasSession) {
-        if (isAtWelcome) {
+        if (isAuthRoute) {
           return '/home';
         }
         return null;
       }
 
-      // 3. Unauthenticated fresh install: route to welcome
-      if (!isAtWelcome) {
+      // 3. Unauthenticated fresh install: allow auth routes, redirect protected to welcome
+      if (!isAuthRoute) {
         return '/welcome';
       }
 
@@ -115,6 +122,24 @@ GoRouter createAppRouter({
         path: '/welcome',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => const WelcomeScreen(),
+      ),
+      GoRoute(
+        path: '/login',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const LoginScreen(),
+      ),
+      GoRoute(
+        path: '/register',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const RegisterScreen(),
+      ),
+      GoRoute(
+        path: '/verify-otp',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) {
+          final email = state.extra as String? ?? '';
+          return OtpVerifyScreen(email: email);
+        },
       ),
       GoRoute(
         path: '/settings',

@@ -57,4 +57,35 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get welcomeTagline =>
       'Track expenses, check value, and manage debt offline.';
+
+  @override
+  String get signIn => 'Sign In';
+
+  @override
+  String get signUp => 'Sign Up';
+
+  @override
+  String get email => 'Email';
+
+  @override
+  String get password => 'Password';
+
+  @override
+  String get verifyEmail => 'Verify Email';
+
+  @override
+  String get otpCode => 'Verification Code';
+
+  @override
+  String get enterOtpPrompt =>
+      'Enter the 6-digit verification code sent to your email.';
+
+  @override
+  String get dontHaveAccount => 'Don\'t have an account? Sign Up';
+
+  @override
+  String get alreadyHaveAccount => 'Already have an account? Sign In';
+
+  @override
+  String get resendCode => 'Resend Code';
 }

@@ -10,6 +10,9 @@ abstract class SessionRepository {
   /// Persists local guest sentinel session.
   Future<void> setGuestMode();
 
+  /// Persists authenticated user session.
+  Future<void> setAuthenticatedUser({required String userId, String? email});
+
   /// Clears persisted session state.
   Future<void> clearSession();
 }
@@ -24,6 +27,7 @@ class LocalSessionRepository implements SessionRepository {
   factory LocalSessionRepository.inMemory({
     bool isGuest = false,
     String? userId,
+    String? email,
   }) {
     final repo = LocalSessionRepository();
     repo._inMemoryStorage = <String, Object>{};
@@ -33,12 +37,16 @@ class LocalSessionRepository implements SessionRepository {
     } else if (userId != null) {
       repo._inMemoryStorage![_keyUserId] = userId;
       repo._inMemoryStorage![_keyIsGuest] = false;
+      if (email != null) {
+        repo._inMemoryStorage![_keyEmail] = email;
+      }
     }
     return repo;
   }
 
   static const String _keyIsGuest = 'haqly_is_guest';
   static const String _keyUserId = 'haqly_user_id';
+  static const String _keyEmail = 'haqly_user_email';
 
   final SharedPreferences? _prefs;
   Map<String, Object>? _inMemoryStorage;
@@ -52,11 +60,12 @@ class LocalSessionRepository implements SessionRepository {
     if (_inMemoryStorage != null) {
       final isGuest = _inMemoryStorage![_keyIsGuest] as bool? ?? false;
       final userId = _inMemoryStorage![_keyUserId] as String?;
+      final email = _inMemoryStorage![_keyEmail] as String?;
       if (isGuest) {
         return const AuthState.guest();
       }
       if (userId != null && userId != AuthState.localSentinel) {
-        return AuthState.authenticated(userId: userId);
+        return AuthState.authenticated(userId: userId, email: email);
       }
       return const AuthState.unauthenticated();
     }
@@ -64,12 +73,13 @@ class LocalSessionRepository implements SessionRepository {
     final prefs = await _getPrefs();
     final isGuest = prefs.getBool(_keyIsGuest) ?? false;
     final userId = prefs.getString(_keyUserId);
+    final email = prefs.getString(_keyEmail);
 
     if (isGuest) {
       return const AuthState.guest();
     }
     if (userId != null && userId != AuthState.localSentinel) {
-      return AuthState.authenticated(userId: userId);
+      return AuthState.authenticated(userId: userId, email: email);
     }
     return const AuthState.unauthenticated();
   }
@@ -79,12 +89,36 @@ class LocalSessionRepository implements SessionRepository {
     if (_inMemoryStorage != null) {
       _inMemoryStorage![_keyIsGuest] = true;
       _inMemoryStorage![_keyUserId] = AuthState.localSentinel;
+      _inMemoryStorage!.remove(_keyEmail);
       return;
     }
 
     final prefs = await _getPrefs();
     await prefs.setBool(_keyIsGuest, true);
     await prefs.setString(_keyUserId, AuthState.localSentinel);
+    await prefs.remove(_keyEmail);
+  }
+
+  @override
+  Future<void> setAuthenticatedUser({
+    required String userId,
+    String? email,
+  }) async {
+    if (_inMemoryStorage != null) {
+      _inMemoryStorage![_keyIsGuest] = false;
+      _inMemoryStorage![_keyUserId] = userId;
+      if (email != null) {
+        _inMemoryStorage![_keyEmail] = email;
+      }
+      return;
+    }
+
+    final prefs = await _getPrefs();
+    await prefs.setBool(_keyIsGuest, false);
+    await prefs.setString(_keyUserId, userId);
+    if (email != null) {
+      await prefs.setString(_keyEmail, email);
+    }
   }
 
   @override
@@ -92,11 +126,13 @@ class LocalSessionRepository implements SessionRepository {
     if (_inMemoryStorage != null) {
       _inMemoryStorage!.remove(_keyIsGuest);
       _inMemoryStorage!.remove(_keyUserId);
+      _inMemoryStorage!.remove(_keyEmail);
       return;
     }
 
     final prefs = await _getPrefs();
     await prefs.remove(_keyIsGuest);
     await prefs.remove(_keyUserId);
+    await prefs.remove(_keyEmail);
   }
 }

@@ -56,4 +56,34 @@ class AppLocalizationsAm extends AppLocalizations {
 
   @override
   String get welcomeTagline => 'ወጪዎችን ይቆጣጠሩ፣ የግዢዎችን ዋጋ ይመዝኑ።';
+
+  @override
+  String get signIn => 'ግባ';
+
+  @override
+  String get signUp => 'ይመዝገቡ';
+
+  @override
+  String get email => 'ኢሜይል';
+
+  @override
+  String get password => 'የይለፍ ቃል';
+
+  @override
+  String get verifyEmail => 'ኢሜይልዎን ያረጋግጡ';
+
+  @override
+  String get otpCode => 'የማረጋገጫ ኮድ';
+
+  @override
+  String get enterOtpPrompt => 'ወደ ኢሜይልዎ የተላከውን ባለ 6-አሃዝ የማረጋገጫ ኮድ ያስገቡ።';
+
+  @override
+  String get dontHaveAccount => 'መለያ የለዎትም? ይመዝገቡ';
+
+  @override
+  String get alreadyHaveAccount => 'ቀደም ሲል መለያ አለዎት? ይግቡ';
+
+  @override
+  String get resendCode => 'ኮድ ደግመህ ላክ';
 }

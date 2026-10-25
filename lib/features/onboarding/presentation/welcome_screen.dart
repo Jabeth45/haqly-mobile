@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:haqly_mobile/core/l10n/generated/app_localizations.dart';
 import 'package:haqly_mobile/features/auth/providers/auth_providers.dart';
 
@@ -88,6 +89,24 @@ class WelcomeScreen extends ConsumerWidget {
                     const SizedBox(width: 8),
                     const Icon(Icons.arrow_forward_rounded, size: 20),
                   ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              OutlinedButton(
+                key: const Key('welcome_signin_button'),
+                onPressed: () => context.push('/login'),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: Text(
+                  l10n?.signIn ?? 'Sign In',
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                  ),
                 ),
               ),
               const SizedBox(height: 12),
