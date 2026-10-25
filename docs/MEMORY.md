@@ -1,6 +1,6 @@
 # MEMORY — current state (update at the end of EVERY session)
 
-Last updated: 2026-10-25 by: agent (TASK-031)
+Last updated: 2026-10-25 by: agent (TASK-032)
 
 ## Done
 - Documentation pack created and audited.
@@ -48,14 +48,20 @@ Last updated: 2026-10-25 by: agent (TASK-031)
     - Guarded `createAppRouter` in `lib/app/router.dart` preventing auth flash during loading (FR-A6) and redirecting unauthenticated cold boots to `/welcome`.
     - Minimalist, brand-aligned `WelcomeScreen` in `lib/features/onboarding/presentation/welcome_screen.dart` with localized "Continue as Guest" CTA.
     - Covered by 7 automated tests across `session_repository_test.dart` and `auth_boot_test.dart` verifying fresh install, cold-boot restore, and Scenario M1 offline data writes (174 total project tests green).
+  - TASK-032: Supabase initialization from `--dart-define-from-file` and secure storage session adapter implemented:
+    - `AppConfig` in `lib/core/config/app_config.dart` reading `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `APP_ENV`.
+    - `SecureLocalStorage` and `SecureGotrueAsyncStorage` in `lib/data/remote/secure_local_storage.dart` implementing Supabase's `LocalStorage` and `GotrueAsyncStorage` interfaces backed by `FlutterSecureStorage` (resolving Security finding S-01; verified session is absent from `SharedPreferences`).
+    - Supabase bootstrap in `lib/data/remote/supabase_client.dart` with auto-refresh and PKCE flow storage.
+    - `main.dart` decoupled from Supabase internals via data/remote facade.
+    - Verified by 7 tests in `secure_local_storage_test.dart` and `app_config_test.dart` (181 total project tests green).
 
 ## In progress
 - Phase 3: Shell and identity.
-  - Next: TASK-032: Supabase init from `--dart-define-from-file`; session in secure storage.
+  - Next: TASK-033: Email sign up/in + OTP verify.
 
 ## Next
 
-- TASK-032: Supabase init from `--dart-define-from-file`; session in secure storage.
+- TASK-033: Email sign up/in + OTP verify.
 
 ## Known issues / risks
 - Web schema to be diffed against proposed schema.
