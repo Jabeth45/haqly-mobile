@@ -1,6 +1,6 @@
 # MEMORY — current state (update at the end of EVERY session)
 
-Last updated: 2026-10-22 by: agent (TASK-020)
+Last updated: 2026-10-24 by: agent (TASK-029)
 
 ## Done
 - Documentation pack created and audited.
@@ -23,19 +23,31 @@ Last updated: 2026-10-22 by: agent (TASK-020)
   - TASK-016: `generateInsight` implemented in `lib/domain/insight_engine.dart` returning typed `Insight` with parameter maps, priority-ordered rules matching DOMAIN_SPEC, and income rules configurable behind flags.
   - TASK-017: `MonthBalance` and `BudgetRing` implemented in `lib/domain/balance_calculator.dart` with negative balance formatting ("-Br 250.00"), ceiling priority (budget > income), and 80%/100% alert thresholds matching all vectors.
   - TASK-018: FNV-1a 32-bit stable cross-platform hash and bilingual initials extraction implemented in `lib/domain/avatar_utils.dart` tested with English and Amharic names.
-- Phase 2 (Data Layer) In Progress:
+- Phase 2 (Data Layer) Complete:
   - TASK-020: Drift SQLite database implemented in `lib/data/db/` (`tables.dart`, `app_database.dart`, `app_database.g.dart`) with schema version 1. All 8 tables (`expenses`, `check_items`, `ledger_entries`, `budgets`, `contacts`, `user_categories`, `outbox`, `sync_meta`), constraints, default values (`user_id = 'LOCAL'`), and 10 query optimization indexes created. In-memory testing constructor and schema migration test harness implemented with 100% passing tests.
   - TASK-021: `ExpenseRepository` implemented in `lib/data/repositories/expense_repository.dart` backed by `AppDatabase` and pure Dart domain models (`Expense`, `TransactionType`, `CategoryTotal`). Atomically writes local records and coalesced outbox pointers in a single DB transaction. Soft delete sets `deleted_at` and enqueues outbox pointer. Stream watchers (`watchAll`, `watchByDate`, `watchByDateRange`), aggregations (`getTotalsForDate`, `getTotalsForDateRange`, `getByCategoryTotals`), and balance calculations (`getBalanceForDateRange`, `getMonthBalance`) fully covered by 10 comprehensive unit tests with in-memory SQLite.
   - TASK-022: `CheckRepository` implemented in `lib/data/repositories/check_repository.dart` backed by `AppDatabase` and pure Dart domain model `CheckItem`. Writes/upserts and soft deletes execute atomically with coalesced outbox sync pointers. Provides reactive streams (`watchAll`, `watchByDate`) and query filters (`getVerdicts`, `getRecentVerdicts`) for value score calculations. Fully covered by 8 automated real-SQLite tests.
+  - TASK-023: `LedgerRepository` implemented in `lib/data/repositories/ledger_repository.dart` backed by `AppDatabase` and pure Dart domain entities (`LedgerEntry`, `LedgerType`, `LedgerSummary`, and RFC 4122 v4 generator in `uuid_utils.dart`). Atomically writes records and coalesced outbox pointers in a single DB transaction. Settle toggle updates `settled` flag and outbox pointer. Soft delete sets `deleted_at` and enqueues outbox pointer. Supports filtering by `type` (lent/borrowed) and `settled` status. Reactive and one-shot open summaries track ETB and USD net balances independently without conversion (per OPEN-015). `saveSplit` converts `SplitResult` into individual lent debt entries excluding payer in a single DB transaction. Fully covered by 20 automated real-SQLite tests.
+  - TASK-024: Budget, Contact, and Category repositories implemented in `lib/data/repositories/` (`budget_repository.dart`, `contact_repository.dart`, `category_repository.dart`) backed by `AppDatabase` and pure Dart domain models (`Budget`, `Contact`, `UserCategory`, `CategoryKind`, `CategoryConstants`). All writes and soft-deletes enqueue coalesced outbox pointers atomically. `BudgetRepository` safely handles the unique `userId` constraint, providing `setBudget`, `clearBudget`, and reactive streams. `ContactRepository` implements case-insensitive search and lookups without requiring runtime phone permissions (`S-10`). `CategoryRepository` combines canonical defaults (6 expense, 7 income per DOMAIN_SPEC §9) with custom categories and handles soft deletion. Domain models and all 3 repositories are covered by 33 comprehensive automated tests (123 total project tests passing green).
+  - TASK-025: Outbox queue implemented in `lib/data/sync/outbox.dart` (`OutboxEntry`, `BackoffPolicy`, `OutboxQueue`) backed by Drift SQLite `outbox` table. Pointers (`table_name`, `row_id`, `created_at`, `attempts`, `last_error`) store references instead of stale payloads. Successive writes to the same row coalesce into a single pointer, resetting attempts and clearing errors. Configurable exponential backoff caps at `maxDelay` (5 mins default). Provides FIFO ready filtering (`getReadyEntries`), distinct reactive stream for pending count (`watchPendingCount`), deletion on sync success, tap-to-retry reset (`resetAttempts`), and strict SQLite transaction rollback crash-safety verified by 11 automated unit tests (134 total project tests passing green).
+  - TASK-026: Remote gateway abstraction, fake test double, mappers, and sync drain orchestrator implemented:
+    - `RemoteGateway` interface in `lib/data/remote/remote_gateway.dart` (`upsert`, `upsertBatch`, `isAuthenticated`, `currentUserId`, `SyncException`, `SyncOfflineException`).
+    - `FakeRemoteGateway` test double in `lib/data/remote/fake_remote_gateway.dart` with online/offline toggling, table/row failure simulation, transient attempts counter, and row store.
+    - `RemoteMappers` in `lib/data/remote/remote_mappers.dart` converting Drift SQLite rows into Supabase remote JSON schemas and bidirectional decimal conversion (`minorToDecimal`, `decimalToMinor`).
+    - `SyncService` in `lib/data/sync/sync_service.dart` orchestrating `drain()`: builds current payload on the fly from SQLite, halts safely on offline, increments attempts and triggers backoff on partial failure, skips unadopted guest rows (`user_id == 'LOCAL'`), and discards stale pointers.
+    - Covered by 11 unit and integration tests across `sync_service_drain_test.dart` and `remote_mappers_test.dart` (145 total project tests passing green).
+  - TASK-027: Pull synchronization implemented in `lib/data/sync/pull.dart` (`PullService`, `PullResult`) with cursor tracking in `sync_meta` and remote-to-local companions in `remote_mappers.dart`. Paginates across all 6 tables using composite cursors `(cursor_updated_at, cursor_id)`. Resolves conflicts against local pending outbox edits (newer local edit preserved; remote newer/equal overwrites). Soft-delete tombstones (`deleted_at`) applied locally. Acceptance verified with 6 automated tests in `pull_test.dart` and `two_device_sync_test.dart` passing scenarios M5 (concurrent offline edits on two devices resolved by newer timestamp without duplicates) and M6 (tombstone propagation across devices) with 151 total project tests green.
+  - TASK-028: Sync triggers implemented in `lib/data/sync/sync_triggers.dart` (`SyncTriggerCoordinator`) with `ConnectivityService` abstraction in `lib/core/services/connectivity_service.dart`. Coordinates local write debouncing (~2s window), immediate sync triggers (`requestSync(immediate: true)`), app lifecycle resume (`onAppForegrounded()`), connectivity hint transitions (offline-to-online recovery), re-entrancy protection, and clean resource cancellation. Verified with 6 automated tests in `sync_triggers_test.dart` (157 total project tests green).
+  - TASK-029: Sync state machine and reactive notifier implemented in `lib/data/sync/sync_state.dart` and `lib/data/sync/sync_state_notifier.dart` (`SyncStatus`, `SyncState`, `SyncStateNotifier`). Drives the quiet app header sync icon (`isIconVisible` hidden in `idle`, visible only in `syncing`/`offline`/`error`). Subscribes reactively to `OutboxQueue.watchPendingCount()` and provides `tapToRetry()` to reset backoff attempts and trigger immediate retry. Fully tested with 6 automated unit tests in `sync_state_notifier_test.dart` (163 total project tests green).
 
 ## In progress
-- Phase 2: Data Layer (Drift SQLite local DB, repositories, outbox sync).
-  - Next: TASK-023: LedgerRepository (filters, open summary, settle, split-save).
+- Phase 3: Shell and identity.
+  - Next: TASK-030: App shell: go_router, 5-tab nav, empty screens, theme.
 
 ## Next
 
-- TASK-023: LedgerRepository.
-- TASK-024: Budget, Contact, Category repositories.
+- TASK-030: App shell: go_router, 5-tab nav, empty screens, theme.
+- TASK-031: Local guest + boot/restore (LOCAL sentinel), no flash of auth.
 
 ## Known issues / risks
 - Web schema to be diffed against proposed schema.
