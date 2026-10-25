@@ -1,31 +1,39 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:haqly_mobile/app/router.dart';
 import 'package:haqly_mobile/core/l10n/generated/app_localizations.dart';
 import 'package:haqly_mobile/core/theme/theme_dark.dart';
 import 'package:haqly_mobile/core/theme/theme_light.dart';
+import 'package:haqly_mobile/features/auth/providers/auth_providers.dart';
 
 void main() {
-  runApp(const HaqlyApp());
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(const ProviderScope(child: HaqlyApp()));
 }
 
 /// The root widget of the Haqly application.
-class HaqlyApp extends StatefulWidget {
+class HaqlyApp extends ConsumerStatefulWidget {
   const HaqlyApp({super.key, this.router});
 
   final GoRouter? router;
 
   @override
-  State<HaqlyApp> createState() => _HaqlyAppState();
+  ConsumerState<HaqlyApp> createState() => _HaqlyAppState();
 }
 
-class _HaqlyAppState extends State<HaqlyApp> {
+class _HaqlyAppState extends ConsumerState<HaqlyApp> {
   late final GoRouter _router;
 
   @override
   void initState() {
     super.initState();
-    _router = widget.router ?? createAppRouter();
+    _router =
+        widget.router ??
+        createAppRouter(
+          authStateProvider: () => ref.read(authStateProvider),
+          refreshListenable: ref.read(authListenableProvider),
+        );
   }
 
   @override

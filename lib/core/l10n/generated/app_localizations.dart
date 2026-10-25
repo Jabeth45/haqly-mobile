@@ -169,6 +169,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Edit'**
   String get edit;
+
+  /// Guest onboarding action
+  ///
+  /// In en, this message translates to:
+  /// **'Continue as Guest'**
+  String get continueAsGuest;
+
+  /// Welcome screen title
+  ///
+  /// In en, this message translates to:
+  /// **'Haqly'**
+  String get welcomeTitle;
+
+  /// Welcome screen subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Smart personal finance for Ethiopia'**
+  String get welcomeSubtitle;
+
+  /// Welcome screen tagline
+  ///
+  /// In en, this message translates to:
+  /// **'Track expenses, check value, and manage debt offline.'**
+  String get welcomeTagline;
 }
 
 class _AppLocalizationsDelegate

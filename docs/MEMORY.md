@@ -1,6 +1,6 @@
 # MEMORY — current state (update at the end of EVERY session)
 
-Last updated: 2026-10-24 by: agent (TASK-030)
+Last updated: 2026-10-25 by: agent (TASK-031)
 
 ## Done
 - Documentation pack created and audited.
@@ -41,14 +41,21 @@ Last updated: 2026-10-24 by: agent (TASK-030)
   - TASK-029: Sync state machine and reactive notifier implemented in `lib/data/sync/sync_state.dart` and `lib/data/sync/sync_state_notifier.dart` (`SyncStatus`, `SyncState`, `SyncStateNotifier`). Drives the quiet app header sync icon (`isIconVisible` hidden in `idle`, visible only in `syncing`/`offline`/`error`). Subscribes reactively to `OutboxQueue.watchPendingCount()` and provides `tapToRetry()` to reset backoff attempts and trigger immediate retry. Fully tested with 6 automated unit tests in `sync_state_notifier_test.dart` (163 total project tests green).
 - Phase 3 (Shell and Identity):
   - TASK-030: App shell implemented with `go_router`, Material 3 persistent bottom navigation (`ScaffoldWithNavBar`), and 5 destination tabs (Home, Add, Check, Ledger, History) using `StatefulShellRoute.indexedStack` (ADR-007). Sub-routes (`/settings`) routed above bottom bar via root navigator. Tab switching, state preservation (form input survives tab transitions), and bilingual navigation labels verified with 4 automated widget tests in `router_test.dart` (167 total project tests green).
+  - TASK-031: Local guest mode, session restore, and auth guard implemented:
+    - Pure Dart immutable `AuthState` in `lib/domain/models/auth_state.dart` with `LOCAL` sentinel.
+    - `SessionRepository` and `LocalSessionRepository` in `lib/data/repositories/session_repository.dart` backed by `SharedPreferences` (with in-memory test factory).
+    - Riverpod state management in `lib/features/auth/providers/auth_providers.dart` (`authStateProvider`, `authListenableProvider`).
+    - Guarded `createAppRouter` in `lib/app/router.dart` preventing auth flash during loading (FR-A6) and redirecting unauthenticated cold boots to `/welcome`.
+    - Minimalist, brand-aligned `WelcomeScreen` in `lib/features/onboarding/presentation/welcome_screen.dart` with localized "Continue as Guest" CTA.
+    - Covered by 7 automated tests across `session_repository_test.dart` and `auth_boot_test.dart` verifying fresh install, cold-boot restore, and Scenario M1 offline data writes (174 total project tests green).
 
 ## In progress
 - Phase 3: Shell and identity.
-  - Next: TASK-031: Local guest + boot/restore (LOCAL sentinel), no flash of auth.
+  - Next: TASK-032: Supabase init from `--dart-define-from-file`; session in secure storage.
 
 ## Next
 
-- TASK-031: Local guest + boot/restore (LOCAL sentinel), no flash of auth.
+- TASK-032: Supabase init from `--dart-define-from-file`; session in secure storage.
 
 ## Known issues / risks
 - Web schema to be diffed against proposed schema.

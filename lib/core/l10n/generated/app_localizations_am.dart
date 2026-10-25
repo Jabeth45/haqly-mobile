@@ -44,4 +44,16 @@ class AppLocalizationsAm extends AppLocalizations {
 
   @override
   String get edit => 'አስተካክል';
+
+  @override
+  String get continueAsGuest => 'እንደ እንግዳ ቀጥል';
+
+  @override
+  String get welcomeTitle => 'ሀቅሊ';
+
+  @override
+  String get welcomeSubtitle => 'የኢትዮጵያ ስማርት የግል ፋይናንስ ረዳት';
+
+  @override
+  String get welcomeTagline => 'ወጪዎችን ይቆጣጠሩ፣ የግዢዎችን ዋጋ ይመዝኑ።';
 }

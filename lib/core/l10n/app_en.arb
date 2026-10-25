@@ -47,5 +47,21 @@
   "edit": "Edit",
   "@edit": {
     "description": "Edit action"
+  },
+  "continueAsGuest": "Continue as Guest",
+  "@continueAsGuest": {
+    "description": "Guest onboarding action"
+  },
+  "welcomeTitle": "Haqly",
+  "@welcomeTitle": {
+    "description": "Welcome screen title"
+  },
+  "welcomeSubtitle": "Smart personal finance for Ethiopia",
+  "@welcomeSubtitle": {
+    "description": "Welcome screen subtitle"
+  },
+  "welcomeTagline": "Track expenses, check value, and manage debt offline.",
+  "@welcomeTagline": {
+    "description": "Welcome screen tagline"
   }
 }

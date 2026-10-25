@@ -11,5 +11,9 @@
   "cancel": "ሰርዝ",
   "delete": "አጥፋ",
   "confirm": "አረጋግጥ",
-  "edit": "አስተካክል"
+  "edit": "አስተካክል",
+  "continueAsGuest": "እንደ እንግዳ ቀጥል",
+  "welcomeTitle": "ሀቅሊ",
+  "welcomeSubtitle": "የኢትዮጵያ ስማርት የግል ፋይናንስ ረዳት",
+  "welcomeTagline": "ወጪዎችን ይቆጣጠሩ፣ የግዢዎችን ዋጋ ይመዝኑ።"
 }

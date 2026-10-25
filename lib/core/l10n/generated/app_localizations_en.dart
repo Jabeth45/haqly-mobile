@@ -44,4 +44,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get edit => 'Edit';
+
+  @override
+  String get continueAsGuest => 'Continue as Guest';
+
+  @override
+  String get welcomeTitle => 'Haqly';
+
+  @override
+  String get welcomeSubtitle => 'Smart personal finance for Ethiopia';
+
+  @override
+  String get welcomeTagline =>
+      'Track expenses, check value, and manage debt offline.';
 }
