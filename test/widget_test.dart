@@ -6,17 +6,14 @@ import 'package:haqly_mobile/core/theme/theme_light.dart';
 import 'package:haqly_mobile/main.dart';
 
 void main() {
-  testWidgets('App renders title and theme smoke test', (
+  testWidgets('App renders shell and theme smoke test', (
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(const HaqlyApp());
     await tester.pumpAndSettle();
 
-    expect(find.text('Haqly'), findsOneWidget);
-    expect(
-      find.text('Not just what did you spend, but was it worth it.'),
-      findsOneWidget,
-    );
+    expect(find.byType(NavigationBar), findsOneWidget);
+    expect(find.text('Home Screen'), findsOneWidget);
   });
 
   testWidgets('Amharic locale renders Ge’ez strings correctly', (
@@ -48,6 +45,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    // Verify Ge'ez script rendered without issue
     expect(find.text('ሀቅሊ'), findsOneWidget);
     expect(find.text('ብድርና እዳ'), findsOneWidget);
     expect(find.text('አስቀምጥ'), findsOneWidget);

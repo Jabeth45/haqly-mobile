@@ -1,6 +1,6 @@
 # MEMORY — current state (update at the end of EVERY session)
 
-Last updated: 2026-10-24 by: agent (TASK-029)
+Last updated: 2026-10-24 by: agent (TASK-030)
 
 ## Done
 - Documentation pack created and audited.
@@ -39,14 +39,15 @@ Last updated: 2026-10-24 by: agent (TASK-029)
   - TASK-027: Pull synchronization implemented in `lib/data/sync/pull.dart` (`PullService`, `PullResult`) with cursor tracking in `sync_meta` and remote-to-local companions in `remote_mappers.dart`. Paginates across all 6 tables using composite cursors `(cursor_updated_at, cursor_id)`. Resolves conflicts against local pending outbox edits (newer local edit preserved; remote newer/equal overwrites). Soft-delete tombstones (`deleted_at`) applied locally. Acceptance verified with 6 automated tests in `pull_test.dart` and `two_device_sync_test.dart` passing scenarios M5 (concurrent offline edits on two devices resolved by newer timestamp without duplicates) and M6 (tombstone propagation across devices) with 151 total project tests green.
   - TASK-028: Sync triggers implemented in `lib/data/sync/sync_triggers.dart` (`SyncTriggerCoordinator`) with `ConnectivityService` abstraction in `lib/core/services/connectivity_service.dart`. Coordinates local write debouncing (~2s window), immediate sync triggers (`requestSync(immediate: true)`), app lifecycle resume (`onAppForegrounded()`), connectivity hint transitions (offline-to-online recovery), re-entrancy protection, and clean resource cancellation. Verified with 6 automated tests in `sync_triggers_test.dart` (157 total project tests green).
   - TASK-029: Sync state machine and reactive notifier implemented in `lib/data/sync/sync_state.dart` and `lib/data/sync/sync_state_notifier.dart` (`SyncStatus`, `SyncState`, `SyncStateNotifier`). Drives the quiet app header sync icon (`isIconVisible` hidden in `idle`, visible only in `syncing`/`offline`/`error`). Subscribes reactively to `OutboxQueue.watchPendingCount()` and provides `tapToRetry()` to reset backoff attempts and trigger immediate retry. Fully tested with 6 automated unit tests in `sync_state_notifier_test.dart` (163 total project tests green).
+- Phase 3 (Shell and Identity):
+  - TASK-030: App shell implemented with `go_router`, Material 3 persistent bottom navigation (`ScaffoldWithNavBar`), and 5 destination tabs (Home, Add, Check, Ledger, History) using `StatefulShellRoute.indexedStack` (ADR-007). Sub-routes (`/settings`) routed above bottom bar via root navigator. Tab switching, state preservation (form input survives tab transitions), and bilingual navigation labels verified with 4 automated widget tests in `router_test.dart` (167 total project tests green).
 
 ## In progress
 - Phase 3: Shell and identity.
-  - Next: TASK-030: App shell: go_router, 5-tab nav, empty screens, theme.
+  - Next: TASK-031: Local guest + boot/restore (LOCAL sentinel), no flash of auth.
 
 ## Next
 
-- TASK-030: App shell: go_router, 5-tab nav, empty screens, theme.
 - TASK-031: Local guest + boot/restore (LOCAL sentinel), no flash of auth.
 
 ## Known issues / risks
