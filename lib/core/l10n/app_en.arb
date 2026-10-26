@@ -47,5 +47,121 @@
   "edit": "Edit",
   "@edit": {
     "description": "Edit action"
+  },
+  "continueAsGuest": "Continue as Guest",
+  "@continueAsGuest": {
+    "description": "Guest onboarding action"
+  },
+  "welcomeTitle": "Haqly",
+  "@welcomeTitle": {
+    "description": "Welcome screen title"
+  },
+  "welcomeSubtitle": "Smart personal finance for Ethiopia",
+  "@welcomeSubtitle": {
+    "description": "Welcome screen subtitle"
+  },
+  "welcomeTagline": "Track expenses, check value, and manage debt offline.",
+  "@welcomeTagline": {
+    "description": "Welcome screen tagline"
+  },
+  "signIn": "Sign In",
+  "@signIn": {
+    "description": "Sign in button/title"
+  },
+  "signUp": "Sign Up",
+  "@signUp": {
+    "description": "Sign up button/title"
+  },
+  "email": "Email",
+  "@email": {
+    "description": "Email input label"
+  },
+  "password": "Password",
+  "@password": {
+    "description": "Password input label"
+  },
+  "verifyEmail": "Verify Email",
+  "@verifyEmail": {
+    "description": "Verify email title"
+  },
+  "otpCode": "Verification Code",
+  "@otpCode": {
+    "description": "OTP code input label"
+  },
+  "enterOtpPrompt": "Enter the 6-digit verification code sent to your email.",
+  "@enterOtpPrompt": {
+    "description": "OTP prompt description"
+  },
+  "dontHaveAccount": "Don't have an account? Sign Up",
+  "@dontHaveAccount": {
+    "description": "Prompt to switch to sign up"
+  },
+  "alreadyHaveAccount": "Already have an account? Sign In",
+  "@alreadyHaveAccount": {
+    "description": "Prompt to switch to sign in"
+  },
+  "resendCode": "Resend Code",
+  "@resendCode": {
+    "description": "Resend verification code action"
+  },
+  "forgotPassword": "Forgot Password?",
+  "@forgotPassword": {
+    "description": "Forgot password button/link"
+  },
+  "resetPassword": "Reset Password",
+  "@resetPassword": {
+    "description": "Reset password screen title and button"
+  },
+  "sendResetCode": "Send Reset Code",
+  "@sendResetCode": {
+    "description": "Send password reset code action"
+  },
+  "newPassword": "New Password",
+  "@newPassword": {
+    "description": "New password input label"
+  },
+  "passwordResetSuccess": "Password reset successfully. You can now sign in.",
+  "@passwordResetSuccess": {
+    "description": "Password reset success confirmation"
+  },
+  "upgradeAccount": "Upgrade Account",
+  "@upgradeAccount": {
+    "description": "Title and header for account upgrade flow"
+  },
+  "upgradeSubtitle": "Back up your data and sync securely across devices.",
+  "@upgradeSubtitle": {
+    "description": "Subtitle explaining benefits of upgrading"
+  },
+  "upgradeAction": "Upgrade",
+  "@upgradeAction": {
+    "description": "Action button to submit upgrade"
+  },
+  "accountConflictTitle": "Account Already Exists",
+  "@accountConflictTitle": {
+    "description": "Header for existing account conflict dialog"
+  },
+  "accountConflictPrompt": "An account with this email already exists. Choose how to handle your device data:",
+  "@accountConflictPrompt": {
+    "description": "Prompt asking user how to resolve existing account conflict"
+  },
+  "keepCloudOption": "Keep Cloud Data",
+  "@keepCloudOption": {
+    "description": "Option to discard device data and download cloud data"
+  },
+  "keepCloudDescription": "Discard device data and download your cloud records.",
+  "@keepCloudDescription": {
+    "description": "Description of keep cloud option"
+  },
+  "replaceWithDeviceOption": "Replace with Device Data",
+  "@replaceWithDeviceOption": {
+    "description": "Option to overwrite cloud data with device records"
+  },
+  "replaceWithDeviceDescription": "Overwrite cloud data with records from this device.",
+  "@replaceWithDeviceDescription": {
+    "description": "Description of replace with device option"
+  },
+  "guestDataPreservedNote": "Your existing expenses and history will be saved to your new account.",
+  "@guestDataPreservedNote": {
+    "description": "Assurance that guest data will be preserved"
   }
 }

@@ -169,6 +169,180 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Edit'**
   String get edit;
+
+  /// Guest onboarding action
+  ///
+  /// In en, this message translates to:
+  /// **'Continue as Guest'**
+  String get continueAsGuest;
+
+  /// Welcome screen title
+  ///
+  /// In en, this message translates to:
+  /// **'Haqly'**
+  String get welcomeTitle;
+
+  /// Welcome screen subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Smart personal finance for Ethiopia'**
+  String get welcomeSubtitle;
+
+  /// Welcome screen tagline
+  ///
+  /// In en, this message translates to:
+  /// **'Track expenses, check value, and manage debt offline.'**
+  String get welcomeTagline;
+
+  /// Sign in button/title
+  ///
+  /// In en, this message translates to:
+  /// **'Sign In'**
+  String get signIn;
+
+  /// Sign up button/title
+  ///
+  /// In en, this message translates to:
+  /// **'Sign Up'**
+  String get signUp;
+
+  /// Email input label
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
+  String get email;
+
+  /// Password input label
+  ///
+  /// In en, this message translates to:
+  /// **'Password'**
+  String get password;
+
+  /// Verify email title
+  ///
+  /// In en, this message translates to:
+  /// **'Verify Email'**
+  String get verifyEmail;
+
+  /// OTP code input label
+  ///
+  /// In en, this message translates to:
+  /// **'Verification Code'**
+  String get otpCode;
+
+  /// OTP prompt description
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the 6-digit verification code sent to your email.'**
+  String get enterOtpPrompt;
+
+  /// Prompt to switch to sign up
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t have an account? Sign Up'**
+  String get dontHaveAccount;
+
+  /// Prompt to switch to sign in
+  ///
+  /// In en, this message translates to:
+  /// **'Already have an account? Sign In'**
+  String get alreadyHaveAccount;
+
+  /// Resend verification code action
+  ///
+  /// In en, this message translates to:
+  /// **'Resend Code'**
+  String get resendCode;
+
+  /// Forgot password button/link
+  ///
+  /// In en, this message translates to:
+  /// **'Forgot Password?'**
+  String get forgotPassword;
+
+  /// Reset password screen title and button
+  ///
+  /// In en, this message translates to:
+  /// **'Reset Password'**
+  String get resetPassword;
+
+  /// Send password reset code action
+  ///
+  /// In en, this message translates to:
+  /// **'Send Reset Code'**
+  String get sendResetCode;
+
+  /// New password input label
+  ///
+  /// In en, this message translates to:
+  /// **'New Password'**
+  String get newPassword;
+
+  /// Password reset success confirmation
+  ///
+  /// In en, this message translates to:
+  /// **'Password reset successfully. You can now sign in.'**
+  String get passwordResetSuccess;
+
+  /// Title and header for account upgrade flow
+  ///
+  /// In en, this message translates to:
+  /// **'Upgrade Account'**
+  String get upgradeAccount;
+
+  /// Subtitle explaining benefits of upgrading
+  ///
+  /// In en, this message translates to:
+  /// **'Back up your data and sync securely across devices.'**
+  String get upgradeSubtitle;
+
+  /// Action button to submit upgrade
+  ///
+  /// In en, this message translates to:
+  /// **'Upgrade'**
+  String get upgradeAction;
+
+  /// Header for existing account conflict dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Account Already Exists'**
+  String get accountConflictTitle;
+
+  /// Prompt asking user how to resolve existing account conflict
+  ///
+  /// In en, this message translates to:
+  /// **'An account with this email already exists. Choose how to handle your device data:'**
+  String get accountConflictPrompt;
+
+  /// Option to discard device data and download cloud data
+  ///
+  /// In en, this message translates to:
+  /// **'Keep Cloud Data'**
+  String get keepCloudOption;
+
+  /// Description of keep cloud option
+  ///
+  /// In en, this message translates to:
+  /// **'Discard device data and download your cloud records.'**
+  String get keepCloudDescription;
+
+  /// Option to overwrite cloud data with device records
+  ///
+  /// In en, this message translates to:
+  /// **'Replace with Device Data'**
+  String get replaceWithDeviceOption;
+
+  /// Description of replace with device option
+  ///
+  /// In en, this message translates to:
+  /// **'Overwrite cloud data with records from this device.'**
+  String get replaceWithDeviceDescription;
+
+  /// Assurance that guest data will be preserved
+  ///
+  /// In en, this message translates to:
+  /// **'Your existing expenses and history will be saved to your new account.'**
+  String get guestDataPreservedNote;
 }
 
 class _AppLocalizationsDelegate

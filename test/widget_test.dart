@@ -1,15 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:haqly_mobile/core/l10n/generated/app_localizations.dart';
 import 'package:haqly_mobile/core/theme/theme_dark.dart';
 import 'package:haqly_mobile/core/theme/theme_light.dart';
+import 'package:haqly_mobile/data/repositories/session_repository.dart';
+import 'package:haqly_mobile/features/auth/providers/auth_providers.dart';
 import 'package:haqly_mobile/main.dart';
 
 void main() {
   testWidgets('App renders shell and theme smoke test', (
     WidgetTester tester,
   ) async {
-    await tester.pumpWidget(const HaqlyApp());
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          sessionRepositoryProvider.overrideWithValue(
+            LocalSessionRepository.inMemory(isGuest: true),
+          ),
+        ],
+        child: const HaqlyApp(),
+      ),
+    );
     await tester.pumpAndSettle();
 
     expect(find.byType(NavigationBar), findsOneWidget);

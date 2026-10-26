@@ -1,11 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:haqly_mobile/app/scaffold_with_nav_bar.dart';
+import 'package:haqly_mobile/domain/models/auth_state.dart';
+import 'package:haqly_mobile/features/auth/presentation/forgot_password_screen.dart';
+import 'package:haqly_mobile/features/auth/presentation/login_screen.dart';
+import 'package:haqly_mobile/features/auth/presentation/otp_verify_screen.dart';
+import 'package:haqly_mobile/features/auth/presentation/register_screen.dart';
+import 'package:haqly_mobile/features/auth/presentation/upgrade_screen.dart';
 import 'package:haqly_mobile/features/check/presentation/check_screen.dart';
 import 'package:haqly_mobile/features/expense/presentation/add_screen.dart';
 import 'package:haqly_mobile/features/history/presentation/history_screen.dart';
 import 'package:haqly_mobile/features/home/presentation/home_screen.dart';
 import 'package:haqly_mobile/features/ledger/presentation/ledger_screen.dart';
+import 'package:haqly_mobile/features/onboarding/presentation/welcome_screen.dart';
 import 'package:haqly_mobile/features/settings/presentation/settings_screen.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>(
@@ -14,15 +21,65 @@ final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>(
 
 /// Builds the app's declarative [GoRouter] configuration.
 /// Uses [StatefulShellRoute.indexedStack] to maintain widget state across the 5 bottom tabs.
-/// Follows docs/ARCHITECTURE.md Section 1 and docs/DESIGN.md Section 3 (ADR-007).
+/// Implements auth redirect guards per docs/ARCHITECTURE.md Section 7, FR-A1, FR-A5, and FR-A6.
 GoRouter createAppRouter({
   String initialLocation = '/home',
   List<NavigatorObserver>? observers,
+  AuthState Function()? authStateProvider,
+  Listenable? refreshListenable,
 }) {
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
     initialLocation: initialLocation,
     observers: observers,
+    refreshListenable: refreshListenable,
+    redirect: (context, state) {
+      if (authStateProvider == null) {
+        return null;
+      }
+
+      final auth = authStateProvider();
+
+      // 1. While initial session is loading, never flash auth screens (FR-A6)
+      if (auth.isLoading) {
+        return null;
+      }
+
+      final isAuthRoute =
+          state.matchedLocation == '/welcome' ||
+          state.matchedLocation == '/login' ||
+          state.matchedLocation == '/register' ||
+          state.matchedLocation == '/forgot-password' ||
+          state.matchedLocation.startsWith('/verify-otp');
+
+      // 2. Active session (guest sentinel or authenticated account)
+      if (auth.hasSession) {
+        if (auth.isAuthenticated) {
+          if (isAuthRoute || state.matchedLocation == '/upgrade') {
+            return '/home';
+          }
+          return null;
+        }
+
+        // Guest session: allow upgrade or login to existing account
+        if (state.matchedLocation == '/upgrade' ||
+            state.matchedLocation == '/login') {
+          return null;
+        }
+
+        if (isAuthRoute) {
+          return '/home';
+        }
+        return null;
+      }
+
+      // 3. Unauthenticated fresh install: allow auth routes, redirect protected to welcome
+      if (!isAuthRoute) {
+        return '/welcome';
+      }
+
+      return null;
+    },
     routes: [
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
@@ -77,6 +134,39 @@ GoRouter createAppRouter({
         ],
       ),
       // Top-level modal/sub-routes outside bottom bar
+      GoRoute(
+        path: '/welcome',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const WelcomeScreen(),
+      ),
+      GoRoute(
+        path: '/login',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const LoginScreen(),
+      ),
+      GoRoute(
+        path: '/register',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const RegisterScreen(),
+      ),
+      GoRoute(
+        path: '/forgot-password',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const ForgotPasswordScreen(),
+      ),
+      GoRoute(
+        path: '/verify-otp',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) {
+          final email = state.extra as String? ?? '';
+          return OtpVerifyScreen(email: email);
+        },
+      ),
+      GoRoute(
+        path: '/upgrade',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const UpgradeScreen(),
+      ),
       GoRoute(
         path: '/settings',
         parentNavigatorKey: _rootNavigatorKey,
