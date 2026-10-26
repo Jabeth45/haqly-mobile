@@ -123,5 +123,45 @@
   "passwordResetSuccess": "Password reset successfully. You can now sign in.",
   "@passwordResetSuccess": {
     "description": "Password reset success confirmation"
+  },
+  "upgradeAccount": "Upgrade Account",
+  "@upgradeAccount": {
+    "description": "Title and header for account upgrade flow"
+  },
+  "upgradeSubtitle": "Back up your data and sync securely across devices.",
+  "@upgradeSubtitle": {
+    "description": "Subtitle explaining benefits of upgrading"
+  },
+  "upgradeAction": "Upgrade",
+  "@upgradeAction": {
+    "description": "Action button to submit upgrade"
+  },
+  "accountConflictTitle": "Account Already Exists",
+  "@accountConflictTitle": {
+    "description": "Header for existing account conflict dialog"
+  },
+  "accountConflictPrompt": "An account with this email already exists. Choose how to handle your device data:",
+  "@accountConflictPrompt": {
+    "description": "Prompt asking user how to resolve existing account conflict"
+  },
+  "keepCloudOption": "Keep Cloud Data",
+  "@keepCloudOption": {
+    "description": "Option to discard device data and download cloud data"
+  },
+  "keepCloudDescription": "Discard device data and download your cloud records.",
+  "@keepCloudDescription": {
+    "description": "Description of keep cloud option"
+  },
+  "replaceWithDeviceOption": "Replace with Device Data",
+  "@replaceWithDeviceOption": {
+    "description": "Option to overwrite cloud data with device records"
+  },
+  "replaceWithDeviceDescription": "Overwrite cloud data with records from this device.",
+  "@replaceWithDeviceDescription": {
+    "description": "Description of replace with device option"
+  },
+  "guestDataPreservedNote": "Your existing expenses and history will be saved to your new account.",
+  "@guestDataPreservedNote": {
+    "description": "Assurance that guest data will be preserved"
   }
 }

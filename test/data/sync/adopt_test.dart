@@ -221,5 +221,44 @@ void main() {
       final expenses = await db.select(db.expenses).get();
       expect(expenses.every((e) => e.userId == authRes.userId), isTrue);
     });
+
+    test(
+      'hasGuestData and countGuestData accurately reflect active records',
+      () async {
+        expect(await adoptionService.hasGuestData(), isFalse);
+        expect(await adoptionService.countGuestData(), 0);
+
+        await seedLocalGuestData();
+
+        expect(await adoptionService.hasGuestData(), isTrue);
+        expect(await adoptionService.countGuestData(), 6);
+      },
+    );
+
+    test('discardGuestData removes all guest records and outbox entries atomically', () async {
+      await seedLocalGuestData();
+      expect(await adoptionService.hasGuestData(), isTrue);
+
+      await adoptionService.discardGuestData();
+
+      expect(await adoptionService.hasGuestData(), isFalse);
+      expect(await adoptionService.countGuestData(), 0);
+
+      final expenses = await db.select(db.expenses).get();
+      final checks = await db.select(db.checkItems).get();
+      final ledgers = await db.select(db.ledgerEntries).get();
+      final budgets = await db.select(db.budgets).get();
+      final contacts = await db.select(db.contacts).get();
+      final categories = await db.select(db.userCategories).get();
+      final outboxEntries = await db.select(db.outbox).get();
+
+      expect(expenses.isEmpty, isTrue);
+      expect(checks.isEmpty, isTrue);
+      expect(ledgers.isEmpty, isTrue);
+      expect(budgets.isEmpty, isTrue);
+      expect(contacts.isEmpty, isTrue);
+      expect(categories.isEmpty, isTrue);
+      expect(outboxEntries.isEmpty, isTrue);
+    });
   });
 }

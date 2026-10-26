@@ -46,6 +46,164 @@ class AdoptionService {
   final OutboxQueue _outbox;
   final Clock clock;
 
+  /// Returns the total number of active (non-deleted) records belonging to [guestUserId].
+  Future<int> countGuestData({
+    String guestUserId = AuthState.localSentinel,
+  }) async {
+    final expCount =
+        await (_db.select(_db.expenses)..where(
+              (tbl) => tbl.userId.equals(guestUserId) & tbl.deletedAt.isNull(),
+            ))
+            .get();
+    final chkCount =
+        await (_db.select(_db.checkItems)..where(
+              (tbl) => tbl.userId.equals(guestUserId) & tbl.deletedAt.isNull(),
+            ))
+            .get();
+    final ledCount =
+        await (_db.select(_db.ledgerEntries)..where(
+              (tbl) => tbl.userId.equals(guestUserId) & tbl.deletedAt.isNull(),
+            ))
+            .get();
+    final budCount = await (_db.select(
+      _db.budgets,
+    )..where((tbl) => tbl.userId.equals(guestUserId))).get();
+    final conCount =
+        await (_db.select(_db.contacts)..where(
+              (tbl) => tbl.userId.equals(guestUserId) & tbl.deletedAt.isNull(),
+            ))
+            .get();
+    final catCount =
+        await (_db.select(_db.userCategories)..where(
+              (tbl) => tbl.userId.equals(guestUserId) & tbl.deletedAt.isNull(),
+            ))
+            .get();
+
+    return expCount.length +
+        chkCount.length +
+        ledCount.length +
+        budCount.length +
+        conCount.length +
+        catCount.length;
+  }
+
+  /// Whether any active records belong to [guestUserId].
+  Future<bool> hasGuestData({
+    String guestUserId = AuthState.localSentinel,
+  }) async {
+    final count = await countGuestData(guestUserId: guestUserId);
+    return count > 0;
+  }
+
+  /// Atomically removes all records belonging to [guestUserId] from local tables
+  /// and clears corresponding outbox entries. Used when the user chooses
+  /// "Keep cloud data" during account conflict resolution (M4).
+  Future<void> discardGuestData({
+    String guestUserId = AuthState.localSentinel,
+  }) async {
+    await _db.transaction(() async {
+      final expIds =
+          (await (_db.select(
+                _db.expenses,
+              )..where((tbl) => tbl.userId.equals(guestUserId))).get())
+              .map((e) => e.id)
+              .toSet();
+      final chkIds =
+          (await (_db.select(
+                _db.checkItems,
+              )..where((tbl) => tbl.userId.equals(guestUserId))).get())
+              .map((e) => e.id)
+              .toSet();
+      final ledIds =
+          (await (_db.select(
+                _db.ledgerEntries,
+              )..where((tbl) => tbl.userId.equals(guestUserId))).get())
+              .map((e) => e.id)
+              .toSet();
+      final budIds =
+          (await (_db.select(
+                _db.budgets,
+              )..where((tbl) => tbl.userId.equals(guestUserId))).get())
+              .map((e) => e.id)
+              .toSet();
+      final conIds =
+          (await (_db.select(
+                _db.contacts,
+              )..where((tbl) => tbl.userId.equals(guestUserId))).get())
+              .map((e) => e.id)
+              .toSet();
+      final catIds =
+          (await (_db.select(
+                _db.userCategories,
+              )..where((tbl) => tbl.userId.equals(guestUserId))).get())
+              .map((e) => e.id)
+              .toSet();
+
+      await (_db.delete(
+        _db.expenses,
+      )..where((tbl) => tbl.userId.equals(guestUserId))).go();
+      await (_db.delete(
+        _db.checkItems,
+      )..where((tbl) => tbl.userId.equals(guestUserId))).go();
+      await (_db.delete(
+        _db.ledgerEntries,
+      )..where((tbl) => tbl.userId.equals(guestUserId))).go();
+      await (_db.delete(
+        _db.budgets,
+      )..where((tbl) => tbl.userId.equals(guestUserId))).go();
+      await (_db.delete(
+        _db.contacts,
+      )..where((tbl) => tbl.userId.equals(guestUserId))).go();
+      await (_db.delete(
+        _db.userCategories,
+      )..where((tbl) => tbl.userId.equals(guestUserId))).go();
+
+      for (final id in expIds) {
+        await (_db.delete(_db.outbox)..where(
+              (tbl) =>
+                  tbl.recordTable.equals('expenses') & tbl.rowId.equals(id),
+            ))
+            .go();
+      }
+      for (final id in chkIds) {
+        await (_db.delete(_db.outbox)..where(
+              (tbl) =>
+                  tbl.recordTable.equals('check_items') & tbl.rowId.equals(id),
+            ))
+            .go();
+      }
+      for (final id in ledIds) {
+        await (_db.delete(_db.outbox)..where(
+              (tbl) =>
+                  tbl.recordTable.equals('ledger_entries') &
+                  tbl.rowId.equals(id),
+            ))
+            .go();
+      }
+      for (final id in budIds) {
+        await (_db.delete(_db.outbox)..where(
+              (tbl) => tbl.recordTable.equals('budgets') & tbl.rowId.equals(id),
+            ))
+            .go();
+      }
+      for (final id in conIds) {
+        await (_db.delete(_db.outbox)..where(
+              (tbl) =>
+                  tbl.recordTable.equals('contacts') & tbl.rowId.equals(id),
+            ))
+            .go();
+      }
+      for (final id in catIds) {
+        await (_db.delete(_db.outbox)..where(
+              (tbl) =>
+                  tbl.recordTable.equals('user_categories') &
+                  tbl.rowId.equals(id),
+            ))
+            .go();
+      }
+    });
+  }
+
   /// In a single database transaction, adopts all rows from [fromUserId]
   /// (defaults to [AuthState.localSentinel]) to [newUserId], updates
   /// `client_updated_at`, and atomically enqueues outbox pointers.

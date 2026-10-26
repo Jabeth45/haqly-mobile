@@ -40,6 +40,48 @@ class SupabaseAuthRepository implements AuthRepository {
   }
 
   @override
+  Future<AuthResult> linkEmail({
+    required String email,
+    required String password,
+  }) async {
+    try {
+      final currentSession = client.auth.currentSession;
+      if (currentSession == null) {
+        return await signUpWithEmail(email: email, password: password);
+      }
+
+      final res = await client.auth.updateUser(
+        supa.UserAttributes(email: email.trim(), password: password),
+      );
+      final user = res.user;
+
+      if (user == null) {
+        return const AuthResult.failure('Unable to link email.');
+      }
+
+      final requiresVerification =
+          user.emailConfirmedAt == null && user.newEmail != null;
+
+      return AuthResult.success(
+        userId: user.id,
+        email: user.newEmail ?? user.email,
+        requiresVerification: requiresVerification,
+      );
+    } on supa.AuthException catch (e) {
+      final lower = e.message.toLowerCase();
+      if (lower.contains('already registered') ||
+          lower.contains('already in use') ||
+          lower.contains('email_exists') ||
+          lower.contains('user_already_exists')) {
+        return AuthResult.emailAlreadyInUse(email: email);
+      }
+      return AuthResult.failure(_mapAuthError(e.message));
+    } catch (_) {
+      return const AuthResult.failure('Network or authentication error.');
+    }
+  }
+
+  @override
   Future<AuthResult> signUpWithEmail({
     required String email,
     required String password,

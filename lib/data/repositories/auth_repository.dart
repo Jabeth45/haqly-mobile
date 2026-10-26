@@ -15,6 +15,13 @@ abstract class AuthRepository {
     required String password,
   });
 
+  /// Converts/links the active guest session to a registered account with email and password.
+  /// If [email] already exists on another account, returns [AuthResult.emailAlreadyInUse].
+  Future<AuthResult> linkEmail({
+    required String email,
+    required String password,
+  });
+
   /// Signs in anonymously to obtain a stable cloud user identifier.
   Future<AuthResult> signInAnonymously();
 
@@ -94,20 +101,55 @@ class FakeAuthRepository implements AuthRepository {
     required String email,
     required String password,
   }) async {
+    final normalized = email.toLowerCase();
+    if (_registeredUsers.containsKey(normalized)) {
+      return AuthResult.emailAlreadyInUse(email: email);
+    }
+
     if (password.length < 6) {
       return const AuthResult.failure(
         'Password must be at least 6 characters.',
       );
     }
 
-    _registeredUsers[email.toLowerCase()] = password;
+    _registeredUsers[normalized] = password;
 
     if (requireOtpForSignUp) {
-      _pendingOtps[email.toLowerCase()] = fixedOtp;
+      _pendingOtps[normalized] = fixedOtp;
       return AuthResult.success(email: email, requiresVerification: true);
     }
 
-    _currentUserId = 'uid_${email.hashCode}';
+    _currentUserId = 'uid_${normalized.hashCode}';
+    _currentUserEmail = email;
+    _isAuthenticated = true;
+
+    return AuthResult.success(userId: _currentUserId, email: email);
+  }
+
+  @override
+  Future<AuthResult> linkEmail({
+    required String email,
+    required String password,
+  }) async {
+    final normalized = email.toLowerCase();
+    if (_registeredUsers.containsKey(normalized)) {
+      return AuthResult.emailAlreadyInUse(email: email);
+    }
+
+    if (password.length < 6) {
+      return const AuthResult.failure(
+        'Password must be at least 6 characters.',
+      );
+    }
+
+    _registeredUsers[normalized] = password;
+
+    if (requireOtpForSignUp) {
+      _pendingOtps[normalized] = fixedOtp;
+      return AuthResult.success(email: email, requiresVerification: true);
+    }
+
+    _currentUserId ??= 'uid_${normalized.hashCode}';
     _currentUserEmail = email;
     _isAuthenticated = true;
 

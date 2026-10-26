@@ -101,4 +101,36 @@ class AppLocalizationsAm extends AppLocalizations {
 
   @override
   String get passwordResetSuccess => 'የይለፍ ቃል በተሳካ ሁኔታ ተቀይሯል። አሁን መግባት ይችላሉ።';
+
+  @override
+  String get upgradeAccount => 'መለያ ያሻሽሉ';
+
+  @override
+  String get upgradeSubtitle => 'መረጃዎን ደህንነቱ በተጠበቀ ሁኔታ ያስቀምጡ እና ያመሳስሉ።';
+
+  @override
+  String get upgradeAction => 'አሻሽል';
+
+  @override
+  String get accountConflictTitle => 'ቀደም ሲል የተመዘገበ መለያ ተገኝቷል';
+
+  @override
+  String get accountConflictPrompt =>
+      'በዚህ ኢሜይል የተመዘገበ መለያ አለ። በስልኩ ያለውን መረጃ እንዴት ማስተናገድ ይፈልጋሉ?';
+
+  @override
+  String get keepCloudOption => 'የክላውድ መረጃ አስቀምጥ';
+
+  @override
+  String get keepCloudDescription => 'የስልኩን መረጃ በማጥፋት የክላውድ መረጃዎችን ያውርዱ።';
+
+  @override
+  String get replaceWithDeviceOption => 'በዚህ ስልክ መረጃ ተካ';
+
+  @override
+  String get replaceWithDeviceDescription =>
+      'የክላውድ መረጃዎችን በዚህ ስልክ ባለው መረጃ ይተኩ።';
+
+  @override
+  String get guestDataPreservedNote => 'ያሉዎት ወጪዎች እና ታሪክ ወደ አዲሱ መለያዎ ይዛወራሉ።';
 }

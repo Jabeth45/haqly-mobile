@@ -1,7 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:haqly_mobile/data/repositories/account_repository.dart';
 import 'package:haqly_mobile/data/repositories/auth_repository.dart';
 import 'package:haqly_mobile/data/repositories/session_repository.dart';
+import 'package:haqly_mobile/domain/models/account_choice.dart';
 import 'package:haqly_mobile/domain/models/auth_result.dart';
 import 'package:haqly_mobile/domain/models/auth_state.dart';
 
@@ -14,6 +16,11 @@ final sessionRepositoryProvider = Provider<SessionRepository>((ref) {
 /// overridden in real app with SupabaseAuthRepository).
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
   return FakeAuthRepository();
+});
+
+/// Provider for the [AccountRepository] managing upgrades and account conflict resolution.
+final accountRepositoryProvider = Provider<AccountRepository>((ref) {
+  return FakeAccountRepository();
 });
 
 /// Riverpod notifier managing identity, guest sentinel, and session restore.
@@ -67,6 +74,57 @@ class AuthNotifier extends Notifier<AuthState> {
       );
     }
     return result;
+  }
+
+  /// Upgrades active guest mode by linking an email and password.
+  /// Follows PRD FR-A4 and docs/ARCHITECTURE.md Section 6.
+  Future<AuthResult> upgradeWithEmail({
+    required String email,
+    required String password,
+  }) async {
+    final accountRepo = ref.read(accountRepositoryProvider);
+    final result = await accountRepo.upgradeWithEmail(
+      email: email,
+      password: password,
+    );
+
+    if (result.isSuccess &&
+        !result.requiresVerification &&
+        result.userId != null) {
+      state = AuthState.authenticated(
+        userId: result.userId!,
+        email: result.email,
+      );
+    }
+    return result;
+  }
+
+  /// Resolves an existing account conflict when upgrading with an email that is already registered (M4).
+  Future<AuthResult> resolveExistingAccount({
+    required String email,
+    required String password,
+    required ExistingAccountChoice choice,
+  }) async {
+    final accountRepo = ref.read(accountRepositoryProvider);
+    final result = await accountRepo.resolveExistingAccount(
+      email: email,
+      password: password,
+      choice: choice,
+    );
+
+    if (result.isSuccess && result.userId != null) {
+      state = AuthState.authenticated(
+        userId: result.userId!,
+        email: result.email,
+      );
+    }
+    return result;
+  }
+
+  /// Checks whether the device contains local guest data.
+  Future<bool> hasGuestData() async {
+    final accountRepo = ref.read(accountRepositoryProvider);
+    return accountRepo.hasGuestData();
   }
 
   /// Registers a new user with email and password.

@@ -30,5 +30,15 @@
   "resetPassword": "የይለፍ ቃል ይቀይሩ",
   "sendResetCode": "የማረጋገጫ ኮድ ላክ",
   "newPassword": "አዲስ የይለፍ ቃል",
-  "passwordResetSuccess": "የይለፍ ቃል በተሳካ ሁኔታ ተቀይሯል። አሁን መግባት ይችላሉ።"
+  "passwordResetSuccess": "የይለፍ ቃል በተሳካ ሁኔታ ተቀይሯል። አሁን መግባት ይችላሉ።",
+  "upgradeAccount": "መለያ ያሻሽሉ",
+  "upgradeSubtitle": "መረጃዎን ደህንነቱ በተጠበቀ ሁኔታ ያስቀምጡ እና ያመሳስሉ።",
+  "upgradeAction": "አሻሽል",
+  "accountConflictTitle": "ቀደም ሲል የተመዘገበ መለያ ተገኝቷል",
+  "accountConflictPrompt": "በዚህ ኢሜይል የተመዘገበ መለያ አለ። በስልኩ ያለውን መረጃ እንዴት ማስተናገድ ይፈልጋሉ?",
+  "keepCloudOption": "የክላውድ መረጃ አስቀምጥ",
+  "keepCloudDescription": "የስልኩን መረጃ በማጥፋት የክላውድ መረጃዎችን ያውርዱ።",
+  "replaceWithDeviceOption": "በዚህ ስልክ መረጃ ተካ",
+  "replaceWithDeviceDescription": "የክላውድ መረጃዎችን በዚህ ስልክ ባለው መረጃ ይተኩ።",
+  "guestDataPreservedNote": "ያሉዎት ወጪዎች እና ታሪክ ወደ አዲሱ መለያዎ ይዛወራሉ።"
 }

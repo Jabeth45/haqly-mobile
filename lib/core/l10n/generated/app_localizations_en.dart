@@ -104,4 +104,39 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get passwordResetSuccess =>
       'Password reset successfully. You can now sign in.';
+
+  @override
+  String get upgradeAccount => 'Upgrade Account';
+
+  @override
+  String get upgradeSubtitle =>
+      'Back up your data and sync securely across devices.';
+
+  @override
+  String get upgradeAction => 'Upgrade';
+
+  @override
+  String get accountConflictTitle => 'Account Already Exists';
+
+  @override
+  String get accountConflictPrompt =>
+      'An account with this email already exists. Choose how to handle your device data:';
+
+  @override
+  String get keepCloudOption => 'Keep Cloud Data';
+
+  @override
+  String get keepCloudDescription =>
+      'Discard device data and download your cloud records.';
+
+  @override
+  String get replaceWithDeviceOption => 'Replace with Device Data';
+
+  @override
+  String get replaceWithDeviceDescription =>
+      'Overwrite cloud data with records from this device.';
+
+  @override
+  String get guestDataPreservedNote =>
+      'Your existing expenses and history will be saved to your new account.';
 }

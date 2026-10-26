@@ -1,6 +1,6 @@
 # MEMORY — current state (update at the end of EVERY session)
 
-Last updated: 2026-10-25 by: agent (TASK-035)
+Last updated: 2026-10-26 by: agent (TASK-036)
 
 ## Done
 - Documentation pack created and audited.
@@ -75,13 +75,23 @@ Last updated: 2026-10-25 by: agent (TASK-035)
     - Added `signInAnonymously()` to `AuthRepository`, `FakeAuthRepository`, and `SupabaseAuthRepository`.
     - Integrated automatic post-sign-in adoption hook in `AuthNotifier.signInAnonymously()`.
     - Verified by 4 automated unit and integration tests in `adopt_test.dart` (196 total project tests green).
+  - TASK-036: Account upgrade (link email) and existing-account choice (M3 & M4) implemented:
+    - Extended `AuthResult` with `emailAlreadyInUse` flag and constructor for detecting existing cloud accounts.
+    - Added pure Dart `ExistingAccountChoice` domain model (`keepCloud`, `replaceWithDevice`).
+    - Extended `AdoptionService` in `lib/data/sync/adopt.dart` with `hasGuestData()`, `countGuestData()`, and atomic SQLite `discardGuestData()`.
+    - Added `linkEmail()` to `AuthRepository`, `FakeAuthRepository`, and `SupabaseAuthRepository` converting anonymous/guest sessions while retaining UUID.
+    - Implemented `AccountRepository` and `AccountRepositoryImpl` in `lib/data/repositories/account_repository.dart` coordinating SQLite adoption/discard, auth linking, and pull hydration.
+    - Built modern, accessible `UpgradeScreen` in `lib/features/auth/presentation/upgrade_screen.dart` with conflict resolution sheet for keep-cloud vs replace choices.
+    - Registered `/upgrade` route in router with guest guard.
+    - Added localized strings in English and Amharic for upgrade flows and choice dialog.
+    - Covered by 10 comprehensive tests in `upgrade_account_test.dart` and `adopt_test.dart` verifying M3, M4 Keep Cloud, and M4 Replace with Device scenarios (206 total project tests green).
 
 ## In progress
-- Phase 3: Shell and identity (TASK-031 to TASK-035 completed).
-  - Next: TASK-036: Upgrade (link email/Google) + existing-account choice.
+- Phase 3: Shell and identity (TASK-031 to TASK-036 completed).
+  - Next: TASK-037: Google sign-in.
 
 ## Next
-- TASK-036: Upgrade (link email/Google) + existing-account choice.
+- TASK-037: Google sign-in.
 
 ## Known issues / risks
 - Web schema to be diffed against proposed schema.

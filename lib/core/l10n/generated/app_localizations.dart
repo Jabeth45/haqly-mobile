@@ -283,6 +283,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Password reset successfully. You can now sign in.'**
   String get passwordResetSuccess;
+
+  /// Title and header for account upgrade flow
+  ///
+  /// In en, this message translates to:
+  /// **'Upgrade Account'**
+  String get upgradeAccount;
+
+  /// Subtitle explaining benefits of upgrading
+  ///
+  /// In en, this message translates to:
+  /// **'Back up your data and sync securely across devices.'**
+  String get upgradeSubtitle;
+
+  /// Action button to submit upgrade
+  ///
+  /// In en, this message translates to:
+  /// **'Upgrade'**
+  String get upgradeAction;
+
+  /// Header for existing account conflict dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Account Already Exists'**
+  String get accountConflictTitle;
+
+  /// Prompt asking user how to resolve existing account conflict
+  ///
+  /// In en, this message translates to:
+  /// **'An account with this email already exists. Choose how to handle your device data:'**
+  String get accountConflictPrompt;
+
+  /// Option to discard device data and download cloud data
+  ///
+  /// In en, this message translates to:
+  /// **'Keep Cloud Data'**
+  String get keepCloudOption;
+
+  /// Description of keep cloud option
+  ///
+  /// In en, this message translates to:
+  /// **'Discard device data and download your cloud records.'**
+  String get keepCloudDescription;
+
+  /// Option to overwrite cloud data with device records
+  ///
+  /// In en, this message translates to:
+  /// **'Replace with Device Data'**
+  String get replaceWithDeviceOption;
+
+  /// Description of replace with device option
+  ///
+  /// In en, this message translates to:
+  /// **'Overwrite cloud data with records from this device.'**
+  String get replaceWithDeviceDescription;
+
+  /// Assurance that guest data will be preserved
+  ///
+  /// In en, this message translates to:
+  /// **'Your existing expenses and history will be saved to your new account.'**
+  String get guestDataPreservedNote;
 }
 
 class _AppLocalizationsDelegate

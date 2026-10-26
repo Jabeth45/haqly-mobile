@@ -6,6 +6,7 @@ import 'package:haqly_mobile/features/auth/presentation/forgot_password_screen.d
 import 'package:haqly_mobile/features/auth/presentation/login_screen.dart';
 import 'package:haqly_mobile/features/auth/presentation/otp_verify_screen.dart';
 import 'package:haqly_mobile/features/auth/presentation/register_screen.dart';
+import 'package:haqly_mobile/features/auth/presentation/upgrade_screen.dart';
 import 'package:haqly_mobile/features/check/presentation/check_screen.dart';
 import 'package:haqly_mobile/features/expense/presentation/add_screen.dart';
 import 'package:haqly_mobile/features/history/presentation/history_screen.dart';
@@ -53,6 +54,19 @@ GoRouter createAppRouter({
 
       // 2. Active session (guest sentinel or authenticated account)
       if (auth.hasSession) {
+        if (auth.isAuthenticated) {
+          if (isAuthRoute || state.matchedLocation == '/upgrade') {
+            return '/home';
+          }
+          return null;
+        }
+
+        // Guest session: allow upgrade or login to existing account
+        if (state.matchedLocation == '/upgrade' ||
+            state.matchedLocation == '/login') {
+          return null;
+        }
+
         if (isAuthRoute) {
           return '/home';
         }
@@ -147,6 +161,11 @@ GoRouter createAppRouter({
           final email = state.extra as String? ?? '';
           return OtpVerifyScreen(email: email);
         },
+      ),
+      GoRoute(
+        path: '/upgrade',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const UpgradeScreen(),
       ),
       GoRoute(
         path: '/settings',
