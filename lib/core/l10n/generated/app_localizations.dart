@@ -343,6 +343,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your existing expenses and history will be saved to your new account.'**
   String get guestDataPreservedNote;
+
+  /// Button label for Google authentication
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with Google'**
+  String get continueWithGoogle;
+
+  /// Divider text separating auth methods
+  ///
+  /// In en, this message translates to:
+  /// **'OR'**
+  String get orDivider;
+
+  /// Button or menu action to permanently delete user account
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Account'**
+  String get deleteAccount;
+
+  /// Warning message before deleting user account
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete your account? This action is permanent and will completely wipe all your records from both this device and the cloud.'**
+  String get deleteAccountWarning;
+
+  /// Confirmation button for permanent account deletion
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Everything'**
+  String get deleteAccountConfirm;
 }
 
 class _AppLocalizationsDelegate

@@ -1,3 +1,4 @@
+import 'package:haqly_mobile/data/db/app_database.dart';
 import 'package:haqly_mobile/data/repositories/auth_repository.dart';
 import 'package:haqly_mobile/data/repositories/session_repository.dart';
 import 'package:haqly_mobile/data/sync/adopt.dart';
@@ -22,6 +23,16 @@ abstract class AccountRepository {
     required String password,
   });
 
+  /// Upgrades an active guest session by linking Google identity.
+  /// Adopts local guest records and preserves history (M3).
+  Future<AuthResult> upgradeWithGoogle();
+
+  /// Adopts active guest records to the specified [newUserId].
+  Future<void> adoptGuestData({
+    required String newUserId,
+    String guestUserId = AuthState.localSentinel,
+  });
+
   /// Resolves account conflict when upgrading with an email that already exists (M4).
   /// If [choice] == [ExistingAccountChoice.keepCloud]:
   ///   Local guest records are discarded and cloud data is hydrated into SQLite.
@@ -33,6 +44,10 @@ abstract class AccountRepository {
     required ExistingAccountChoice choice,
     String guestUserId = AuthState.localSentinel,
   });
+
+  /// Permanently deletes the user account: calls remote Edge Function to delete the auth user
+  /// and cloud rows, wipes local SQLite database, and clears session storage (FR-A7, M14).
+  Future<AuthResult> deleteAccount();
 }
 
 /// Production implementation of [AccountRepository].
@@ -42,12 +57,14 @@ class AccountRepositoryImpl implements AccountRepository {
     required this.authRepository,
     required this.sessionRepository,
     required this.pullService,
+    this.db,
   });
 
   final AdoptionService adoptionService;
   final AuthRepository authRepository;
   final SessionRepository sessionRepository;
   final PullService pullService;
+  final AppDatabase? db;
 
   @override
   Future<bool> hasGuestData({
@@ -89,6 +106,33 @@ class AccountRepositoryImpl implements AccountRepository {
     }
 
     return result;
+  }
+
+  @override
+  Future<AuthResult> upgradeWithGoogle() async {
+    final result = await authRepository.linkGoogle();
+
+    if (result.emailAlreadyInUse) {
+      return result;
+    }
+
+    if (result.isSuccess && result.userId != null) {
+      await adoptionService.adopt(newUserId: result.userId!);
+      await sessionRepository.setAuthenticatedUser(
+        userId: result.userId!,
+        email: result.email,
+      );
+    }
+
+    return result;
+  }
+
+  @override
+  Future<void> adoptGuestData({
+    required String newUserId,
+    String guestUserId = AuthState.localSentinel,
+  }) async {
+    await adoptionService.adopt(newUserId: newUserId, fromUserId: guestUserId);
   }
 
   @override
@@ -136,6 +180,25 @@ class AccountRepositoryImpl implements AccountRepository {
 
     return authRes;
   }
+
+  @override
+  Future<AuthResult> deleteAccount() async {
+    // 1. Invoke remote deletion via AuthRepository (calls Supabase Edge Function)
+    final remoteRes = await authRepository.deleteAccount();
+    if (!remoteRes.isSuccess) {
+      return remoteRes;
+    }
+
+    // 2. Wipe local SQLite database completely
+    if (db != null) {
+      await db!.wipeAllData();
+    }
+
+    // 3. Clear local session tokens/storage
+    await sessionRepository.clearSession();
+
+    return const AuthResult.success();
+  }
 }
 
 /// In-memory fake implementation of [AccountRepository] for tests and defaults.
@@ -155,6 +218,8 @@ class FakeAccountRepository implements AccountRepository {
   bool isAdopted = false;
   bool isDiscarded = false;
   bool isHydratedFromCloud = false;
+  bool isWiped = false;
+  bool failDeletion = false;
 
   @override
   Future<bool> hasGuestData({
@@ -190,6 +255,27 @@ class FakeAccountRepository implements AccountRepository {
   }
 
   @override
+  Future<AuthResult> upgradeWithGoogle() async {
+    _hasGuestData = false;
+    _guestCount = 0;
+    isAdopted = true;
+    return const AuthResult.success(
+      userId: 'google_user_001',
+      email: 'google_user@haqly.app',
+    );
+  }
+
+  @override
+  Future<void> adoptGuestData({
+    required String newUserId,
+    String guestUserId = AuthState.localSentinel,
+  }) async {
+    _hasGuestData = false;
+    _guestCount = 0;
+    isAdopted = true;
+  }
+
+  @override
   Future<AuthResult> resolveExistingAccount({
     required String email,
     required String password,
@@ -214,5 +300,18 @@ class FakeAccountRepository implements AccountRepository {
         break;
     }
     return AuthResult.success(userId: userId, email: email);
+  }
+
+  @override
+  Future<AuthResult> deleteAccount() async {
+    if (failDeletion) {
+      return const AuthResult.failure(
+        'Unable to delete account. Please try again.',
+      );
+    }
+    _hasGuestData = false;
+    _guestCount = 0;
+    isWiped = true;
+    return const AuthResult.success();
   }
 }

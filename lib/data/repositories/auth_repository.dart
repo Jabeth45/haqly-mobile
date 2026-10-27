@@ -47,6 +47,16 @@ abstract class AuthRepository {
   /// Signs out of the active account.
   Future<void> signOut();
 
+  /// Permanently deletes the authenticated user account and associated cloud data.
+  /// Follows PRD FR-A7, SECURITY S-08, and Scenario M14.
+  Future<AuthResult> deleteAccount();
+
+  /// Signs in using Google authentication.
+  Future<AuthResult> signInWithGoogle({String? redirectTo});
+
+  /// Links Google authentication to the active account.
+  Future<AuthResult> linkGoogle({String? redirectTo});
+
   /// Current authenticated user identifier or null.
   String? get currentUserId;
 
@@ -78,6 +88,12 @@ class FakeAuthRepository implements AuthRepository {
   bool requireOtpForSignUp = true;
   String fixedOtp = '123456';
 
+  String fakeGoogleUserId = 'google_user_001';
+  String fakeGoogleEmail = 'google_user@haqly.app';
+  bool failGoogleSignIn = false;
+  bool googleEmailInUse = false;
+  bool failAccountDeletion = false;
+
   @override
   String? get currentUserId => _currentUserId;
 
@@ -86,6 +102,33 @@ class FakeAuthRepository implements AuthRepository {
 
   @override
   bool get isAuthenticated => _isAuthenticated;
+
+  @override
+  Future<AuthResult> signInWithGoogle({String? redirectTo}) async {
+    if (failGoogleSignIn) {
+      return const AuthResult.failure(
+        'Google sign-in was cancelled or failed.',
+      );
+    }
+    _currentUserId = fakeGoogleUserId;
+    _currentUserEmail = fakeGoogleEmail;
+    _isAuthenticated = true;
+    return AuthResult.success(userId: _currentUserId, email: _currentUserEmail);
+  }
+
+  @override
+  Future<AuthResult> linkGoogle({String? redirectTo}) async {
+    if (failGoogleSignIn) {
+      return const AuthResult.failure('Google account link failed.');
+    }
+    if (googleEmailInUse) {
+      return AuthResult.emailAlreadyInUse(email: fakeGoogleEmail);
+    }
+    _currentUserId ??= fakeGoogleUserId;
+    _currentUserEmail = fakeGoogleEmail;
+    _isAuthenticated = true;
+    return AuthResult.success(userId: _currentUserId, email: _currentUserEmail);
+  }
 
   @override
   Future<AuthResult> signInAnonymously() async {
@@ -249,5 +292,21 @@ class FakeAuthRepository implements AuthRepository {
     _currentUserId = null;
     _currentUserEmail = null;
     _isAuthenticated = false;
+  }
+
+  @override
+  Future<AuthResult> deleteAccount() async {
+    if (failAccountDeletion) {
+      return const AuthResult.failure(
+        'Unable to delete account. Please try again.',
+      );
+    }
+    if (_currentUserEmail != null) {
+      _registeredUsers.remove(_currentUserEmail!.toLowerCase());
+    }
+    _currentUserId = null;
+    _currentUserEmail = null;
+    _isAuthenticated = false;
+    return const AuthResult.success();
   }
 }

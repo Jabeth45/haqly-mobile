@@ -40,5 +40,10 @@
   "keepCloudDescription": "የስልኩን መረጃ በማጥፋት የክላውድ መረጃዎችን ያውርዱ።",
   "replaceWithDeviceOption": "በዚህ ስልክ መረጃ ተካ",
   "replaceWithDeviceDescription": "የክላውድ መረጃዎችን በዚህ ስልክ ባለው መረጃ ይተኩ።",
-  "guestDataPreservedNote": "ያሉዎት ወጪዎች እና ታሪክ ወደ አዲሱ መለያዎ ይዛወራሉ።"
+  "guestDataPreservedNote": "ያሉዎት ወጪዎች እና ታሪክ ወደ አዲሱ መለያዎ ይዛወራሉ።",
+  "continueWithGoogle": "በGoogle ይቀጥሉ",
+  "orDivider": "ወይም",
+  "deleteAccount": "መለያ ሰርዝ",
+  "deleteAccountWarning": "መለያዎን መሰረዝ እንደሚፈልጉ እርግጠኛ ነዎት? ይህ እርምጃ ቋሚ ሲሆን ሁሉንም መረጃዎች ከዚህ ስልክ እና ከክላውድ ሙሉ በሙሉ ያጠፋል።",
+  "deleteAccountConfirm": "ሁሉንም አጥፋ"
 }

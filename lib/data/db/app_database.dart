@@ -40,6 +40,21 @@ class AppDatabase extends _$AppDatabase {
       // Schema upgrades from v1 onwards will be placed here.
     },
   );
+
+  /// Atomically deletes all records across all tables in a single transaction.
+  /// Follows PRD FR-A7, SECURITY S-08, and Scenario M14 (local wipe on delete-account).
+  Future<void> wipeAllData() {
+    return transaction(() async {
+      await delete(expenses).go();
+      await delete(checkItems).go();
+      await delete(ledgerEntries).go();
+      await delete(budgets).go();
+      await delete(contacts).go();
+      await delete(userCategories).go();
+      await delete(outbox).go();
+      await delete(syncMeta).go();
+    });
+  }
 }
 
 LazyDatabase _openConnection() {

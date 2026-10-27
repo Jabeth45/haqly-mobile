@@ -139,4 +139,20 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get guestDataPreservedNote =>
       'Your existing expenses and history will be saved to your new account.';
+
+  @override
+  String get continueWithGoogle => 'Continue with Google';
+
+  @override
+  String get orDivider => 'OR';
+
+  @override
+  String get deleteAccount => 'Delete Account';
+
+  @override
+  String get deleteAccountWarning =>
+      'Are you sure you want to delete your account? This action is permanent and will completely wipe all your records from both this device and the cloud.';
+
+  @override
+  String get deleteAccountConfirm => 'Delete Everything';
 }

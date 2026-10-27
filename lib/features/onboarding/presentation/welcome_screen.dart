@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:haqly_mobile/core/l10n/generated/app_localizations.dart';
+import 'package:haqly_mobile/features/auth/presentation/google_sign_in_button.dart';
 import 'package:haqly_mobile/features/auth/providers/auth_providers.dart';
 
 /// First-launch welcome and offline guest entry screen.
@@ -90,6 +91,18 @@ class WelcomeScreen extends ConsumerWidget {
                     const Icon(Icons.arrow_forward_rounded, size: 20),
                   ],
                 ),
+              ),
+              const SizedBox(height: 12),
+              GoogleSignInButton(
+                key: const Key('welcome_google_button'),
+                onPressed: () async {
+                  final res = await ref
+                      .read(authStateProvider.notifier)
+                      .signInWithGoogle();
+                  if (res.isSuccess && context.mounted) {
+                    context.go('/home');
+                  }
+                },
               ),
               const SizedBox(height: 12),
               OutlinedButton(

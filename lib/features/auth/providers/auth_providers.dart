@@ -99,6 +99,21 @@ class AuthNotifier extends Notifier<AuthState> {
     return result;
   }
 
+  /// Upgrades active guest mode by linking Google authentication.
+  /// Follows PRD FR-A4 and docs/ARCHITECTURE.md Section 6.
+  Future<AuthResult> upgradeWithGoogle() async {
+    final accountRepo = ref.read(accountRepositoryProvider);
+    final result = await accountRepo.upgradeWithGoogle();
+
+    if (result.isSuccess && result.userId != null) {
+      state = AuthState.authenticated(
+        userId: result.userId!,
+        email: result.email,
+      );
+    }
+    return result;
+  }
+
   /// Resolves an existing account conflict when upgrading with an email that is already registered (M4).
   Future<AuthResult> resolveExistingAccount({
     required String email,
@@ -179,6 +194,32 @@ class AuthNotifier extends Notifier<AuthState> {
     return result;
   }
 
+  /// Signs in using Google authentication.
+  /// Automatically adopts existing device guest data to the authenticated account if present.
+  Future<AuthResult> signInWithGoogle({bool adoptGuestData = true}) async {
+    final authRepo = ref.read(authRepositoryProvider);
+    final result = await authRepo.signInWithGoogle();
+
+    if (result.isSuccess && result.userId != null) {
+      if (adoptGuestData) {
+        final accountRepo = ref.read(accountRepositoryProvider);
+        if (await accountRepo.hasGuestData()) {
+          await accountRepo.adoptGuestData(newUserId: result.userId!);
+        }
+      }
+      final sessionRepo = ref.read(sessionRepositoryProvider);
+      await sessionRepo.setAuthenticatedUser(
+        userId: result.userId!,
+        email: result.email,
+      );
+      state = AuthState.authenticated(
+        userId: result.userId!,
+        email: result.email,
+      );
+    }
+    return result;
+  }
+
   /// Verifies email verification OTP code.
   Future<AuthResult> verifyOtp({
     required String email,
@@ -234,6 +275,17 @@ class AuthNotifier extends Notifier<AuthState> {
     await authRepo.signOut();
     await sessionRepo.clearSession();
     state = const AuthState.unauthenticated();
+  }
+
+  /// Permanently deletes the account and wipes all local and cloud data (FR-A7, S-08, M14).
+  Future<AuthResult> deleteAccount() async {
+    final accountRepo = ref.read(accountRepositoryProvider);
+    final result = await accountRepo.deleteAccount();
+
+    if (result.isSuccess) {
+      state = const AuthState.unauthenticated();
+    }
+    return result;
   }
 }
 
