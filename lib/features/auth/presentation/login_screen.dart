@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:haqly_mobile/core/l10n/generated/app_localizations.dart';
+import 'package:haqly_mobile/features/auth/presentation/google_sign_in_button.dart';
 import 'package:haqly_mobile/features/auth/providers/auth_providers.dart';
 
 /// Screen for authenticating existing users via email and password.
@@ -43,6 +44,30 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           email: _emailController.text.trim(),
           password: _passwordController.text,
         );
+
+    if (!mounted) return;
+
+    setState(() {
+      _isLoading = false;
+      if (!result.isSuccess) {
+        _errorMessage = result.errorMessage;
+      }
+    });
+
+    if (result.isSuccess) {
+      context.go('/home');
+    }
+  }
+
+  Future<void> _handleGoogleSignIn() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    final result = await ref
+        .read(authStateProvider.notifier)
+        .signInWithGoogle();
 
     if (!mounted) return;
 
@@ -165,6 +190,32 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : Text(l10n?.signIn ?? 'Sign In'),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Divider(color: theme.colorScheme.outlineVariant),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: Text(
+                        l10n?.orDivider ?? 'OR',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: Divider(color: theme.colorScheme.outlineVariant),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                GoogleSignInButton(
+                  key: const Key('google_signin_button'),
+                  isLoading: _isLoading,
+                  onPressed: _handleGoogleSignIn,
                 ),
                 const SizedBox(height: 16),
                 TextButton(

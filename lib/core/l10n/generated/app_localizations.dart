@@ -343,6 +343,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your existing expenses and history will be saved to your new account.'**
   String get guestDataPreservedNote;
+
+  /// Button label for Google authentication
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with Google'**
+  String get continueWithGoogle;
+
+  /// Divider text separating auth methods
+  ///
+  /// In en, this message translates to:
+  /// **'OR'**
+  String get orDivider;
 }
 
 class _AppLocalizationsDelegate

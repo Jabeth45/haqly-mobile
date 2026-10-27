@@ -133,4 +133,10 @@ class AppLocalizationsAm extends AppLocalizations {
 
   @override
   String get guestDataPreservedNote => 'ያሉዎት ወጪዎች እና ታሪክ ወደ አዲሱ መለያዎ ይዛወራሉ።';
+
+  @override
+  String get continueWithGoogle => 'በGoogle ይቀጥሉ';
+
+  @override
+  String get orDivider => 'ወይም';
 }

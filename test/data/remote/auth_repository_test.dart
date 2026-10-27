@@ -172,4 +172,43 @@ void main() {
       },
     );
   });
+
+  group('TASK-037: Google Authentication (FR-A2)', () {
+    late FakeAuthRepository authRepo;
+
+    setUp(() {
+      authRepo = FakeAuthRepository();
+    });
+
+    test('signInWithGoogle successfully authenticates', () async {
+      final res = await authRepo.signInWithGoogle();
+      expect(res.isSuccess, isTrue);
+      expect(res.userId, 'google_user_001');
+      expect(res.email, 'google_user@haqly.app');
+      expect(authRepo.isAuthenticated, isTrue);
+    });
+
+    test('signInWithGoogle handles cancellation or error', () async {
+      authRepo.failGoogleSignIn = true;
+      final res = await authRepo.signInWithGoogle();
+      expect(res.isSuccess, isFalse);
+      expect(res.errorMessage, contains('cancelled or failed'));
+      expect(authRepo.isAuthenticated, isFalse);
+    });
+
+    test('linkGoogle successfully links to account', () async {
+      final res = await authRepo.linkGoogle();
+      expect(res.isSuccess, isTrue);
+      expect(res.userId, 'google_user_001');
+      expect(res.email, 'google_user@haqly.app');
+      expect(authRepo.isAuthenticated, isTrue);
+    });
+
+    test('linkGoogle detects account collision', () async {
+      authRepo.googleEmailInUse = true;
+      final res = await authRepo.linkGoogle();
+      expect(res.isSuccess, isFalse);
+      expect(res.emailAlreadyInUse, isTrue);
+    });
+  });
 }

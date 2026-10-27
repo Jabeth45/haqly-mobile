@@ -163,5 +163,13 @@
   "guestDataPreservedNote": "Your existing expenses and history will be saved to your new account.",
   "@guestDataPreservedNote": {
     "description": "Assurance that guest data will be preserved"
+  },
+  "continueWithGoogle": "Continue with Google",
+  "@continueWithGoogle": {
+    "description": "Button label for Google authentication"
+  },
+  "orDivider": "OR",
+  "@orDivider": {
+    "description": "Divider text separating auth methods"
   }
 }

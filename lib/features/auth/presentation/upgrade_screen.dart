@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:haqly_mobile/core/l10n/generated/app_localizations.dart';
 import 'package:haqly_mobile/core/theme/tokens.dart';
 import 'package:haqly_mobile/domain/models/account_choice.dart';
+import 'package:haqly_mobile/features/auth/presentation/google_sign_in_button.dart';
 import 'package:haqly_mobile/features/auth/providers/auth_providers.dart';
 
 /// Screen allowing guest users to upgrade to a cloud-synced account.
@@ -70,6 +71,40 @@ class _UpgradeScreenState extends ConsumerState<UpgradeScreen> {
     } else {
       context.go('/home');
     }
+  }
+
+  Future<void> _handleGoogleUpgrade() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    final result = await ref
+        .read(authStateProvider.notifier)
+        .upgradeWithGoogle();
+
+    if (!mounted) return;
+
+    setState(() {
+      _isLoading = false;
+    });
+
+    if (result.emailAlreadyInUse) {
+      await _showExistingAccountChoiceDialog(
+        result.email ?? 'google_user@haqly.app',
+        '',
+      );
+      return;
+    }
+
+    if (!result.isSuccess) {
+      setState(() {
+        _errorMessage = result.errorMessage;
+      });
+      return;
+    }
+
+    context.go('/home');
   }
 
   Future<void> _showExistingAccountChoiceDialog(
@@ -504,6 +539,32 @@ class _UpgradeScreenState extends ConsumerState<UpgradeScreen> {
                           ),
                         )
                       : Text(l10n?.upgradeAction ?? 'Upgrade'),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Divider(color: theme.colorScheme.outlineVariant),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: Text(
+                        l10n?.orDivider ?? 'OR',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: Divider(color: theme.colorScheme.outlineVariant),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                GoogleSignInButton(
+                  key: const Key('google_upgrade_button'),
+                  isLoading: _isLoading,
+                  onPressed: _handleGoogleUpgrade,
                 ),
                 const SizedBox(height: 16),
                 Center(
