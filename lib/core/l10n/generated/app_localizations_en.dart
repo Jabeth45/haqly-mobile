@@ -139,4 +139,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get guestDataPreservedNote =>
       'Your existing expenses and history will be saved to your new account.';
+
+  @override
+  String get continueWithGoogle => 'Continue with Google';
+
+  @override
+  String get orDivider => 'OR';
 }

@@ -22,6 +22,16 @@ abstract class AccountRepository {
     required String password,
   });
 
+  /// Upgrades an active guest session by linking Google identity.
+  /// Adopts local guest records and preserves history (M3).
+  Future<AuthResult> upgradeWithGoogle();
+
+  /// Adopts active guest records to the specified [newUserId].
+  Future<void> adoptGuestData({
+    required String newUserId,
+    String guestUserId = AuthState.localSentinel,
+  });
+
   /// Resolves account conflict when upgrading with an email that already exists (M4).
   /// If [choice] == [ExistingAccountChoice.keepCloud]:
   ///   Local guest records are discarded and cloud data is hydrated into SQLite.
@@ -89,6 +99,33 @@ class AccountRepositoryImpl implements AccountRepository {
     }
 
     return result;
+  }
+
+  @override
+  Future<AuthResult> upgradeWithGoogle() async {
+    final result = await authRepository.linkGoogle();
+
+    if (result.emailAlreadyInUse) {
+      return result;
+    }
+
+    if (result.isSuccess && result.userId != null) {
+      await adoptionService.adopt(newUserId: result.userId!);
+      await sessionRepository.setAuthenticatedUser(
+        userId: result.userId!,
+        email: result.email,
+      );
+    }
+
+    return result;
+  }
+
+  @override
+  Future<void> adoptGuestData({
+    required String newUserId,
+    String guestUserId = AuthState.localSentinel,
+  }) async {
+    await adoptionService.adopt(newUserId: newUserId, fromUserId: guestUserId);
   }
 
   @override
@@ -187,6 +224,27 @@ class FakeAccountRepository implements AccountRepository {
     _guestCount = 0;
     isAdopted = true;
     return AuthResult.success(userId: 'uid_${email.hashCode}', email: email);
+  }
+
+  @override
+  Future<AuthResult> upgradeWithGoogle() async {
+    _hasGuestData = false;
+    _guestCount = 0;
+    isAdopted = true;
+    return const AuthResult.success(
+      userId: 'google_user_001',
+      email: 'google_user@haqly.app',
+    );
+  }
+
+  @override
+  Future<void> adoptGuestData({
+    required String newUserId,
+    String guestUserId = AuthState.localSentinel,
+  }) async {
+    _hasGuestData = false;
+    _guestCount = 0;
+    isAdopted = true;
   }
 
   @override

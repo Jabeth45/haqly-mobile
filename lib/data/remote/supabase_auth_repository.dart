@@ -22,6 +22,57 @@ class SupabaseAuthRepository implements AuthRepository {
   bool get isAuthenticated => client.auth.currentSession != null;
 
   @override
+  Future<AuthResult> signInWithGoogle({String? redirectTo}) async {
+    try {
+      final launched = await client.auth.signInWithOAuth(
+        supa.OAuthProvider.google,
+        redirectTo: redirectTo ?? 'com.haqly.app://login-callback',
+      );
+
+      if (!launched) {
+        return const AuthResult.failure('Unable to start Google sign-in.');
+      }
+
+      final user = client.auth.currentUser;
+      return AuthResult.success(userId: user?.id, email: user?.email);
+    } on supa.AuthException catch (e) {
+      return AuthResult.failure(_mapAuthError(e.message));
+    } catch (_) {
+      return const AuthResult.failure('Network or authentication error.');
+    }
+  }
+
+  @override
+  Future<AuthResult> linkGoogle({String? redirectTo}) async {
+    try {
+      final launched = await client.auth.linkIdentity(
+        supa.OAuthProvider.google,
+        redirectTo: redirectTo ?? 'com.haqly.app://login-callback',
+      );
+
+      if (!launched) {
+        return const AuthResult.failure('Unable to start Google account link.');
+      }
+
+      final user = client.auth.currentUser;
+      return AuthResult.success(userId: user?.id, email: user?.email);
+    } on supa.AuthException catch (e) {
+      final lower = e.message.toLowerCase();
+      if (lower.contains('already registered') ||
+          lower.contains('already in use') ||
+          lower.contains('already linked') ||
+          lower.contains('identity_already_exists')) {
+        return AuthResult.emailAlreadyInUse(
+          email: client.auth.currentUser?.email ?? '',
+        );
+      }
+      return AuthResult.failure(_mapAuthError(e.message));
+    } catch (_) {
+      return const AuthResult.failure('Network or authentication error.');
+    }
+  }
+
+  @override
   Future<AuthResult> signInAnonymously() async {
     try {
       final res = await client.auth.signInAnonymously();
