@@ -272,6 +272,28 @@ class SupabaseAuthRepository implements AuthRepository {
     }
   }
 
+  @override
+  Future<AuthResult> deleteAccount() async {
+    try {
+      final res = await client.functions.invoke('delete-account');
+      if (res.status != 200) {
+        final data = res.data;
+        final err = data is Map ? (data['error'] as String?) : null;
+        return AuthResult.failure(err ?? 'Unable to delete account.');
+      }
+      await signOut();
+      return const AuthResult.success();
+    } on supa.FunctionException catch (e) {
+      return AuthResult.failure(
+        e.details?.toString() ?? 'Unable to delete account.',
+      );
+    } catch (_) {
+      return const AuthResult.failure(
+        'Network or server error during account deletion.',
+      );
+    }
+  }
+
   String _mapAuthError(String message) {
     final lower = message.toLowerCase();
     if (lower.contains('invalid login credentials') ||

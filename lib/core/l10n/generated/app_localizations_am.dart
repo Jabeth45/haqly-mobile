@@ -139,4 +139,14 @@ class AppLocalizationsAm extends AppLocalizations {
 
   @override
   String get orDivider => 'ወይም';
+
+  @override
+  String get deleteAccount => 'መለያ ሰርዝ';
+
+  @override
+  String get deleteAccountWarning =>
+      'መለያዎን መሰረዝ እንደሚፈልጉ እርግጠኛ ነዎት? ይህ እርምጃ ቋሚ ሲሆን ሁሉንም መረጃዎች ከዚህ ስልክ እና ከክላውድ ሙሉ በሙሉ ያጠፋል።';
+
+  @override
+  String get deleteAccountConfirm => 'ሁሉንም አጥፋ';
 }

@@ -211,4 +211,34 @@ void main() {
       expect(res.emailAlreadyInUse, isTrue);
     });
   });
+
+  group('TASK-038: Account Deletion (FR-A7, S-08, M14)', () {
+    late FakeAuthRepository authRepo;
+
+    setUp(() {
+      authRepo = FakeAuthRepository(
+        initialUserId: 'user-to-delete',
+        initialEmail: 'delete_me@haqly.app',
+      );
+    });
+
+    test('deleteAccount successfully wipes auth state and signs out', () async {
+      expect(authRepo.isAuthenticated, isTrue);
+
+      final res = await authRepo.deleteAccount();
+      expect(res.isSuccess, isTrue);
+      expect(authRepo.isAuthenticated, isFalse);
+      expect(authRepo.currentUserId, isNull);
+      expect(authRepo.currentUserEmail, isNull);
+    });
+
+    test('deleteAccount handles server failure', () async {
+      authRepo.failAccountDeletion = true;
+
+      final res = await authRepo.deleteAccount();
+      expect(res.isSuccess, isFalse);
+      expect(res.errorMessage, contains('Unable to delete account'));
+      expect(authRepo.isAuthenticated, isTrue);
+    });
+  });
 }

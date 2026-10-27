@@ -52,7 +52,7 @@ Every task also meets the gates in TEST_PLAN section 1. "Blocked by" refers to O
 | TASK-035 | [DONE] Anonymous sign-in + adopt (idempotent) | 031, 032 | M3 first half; adopt twice = no change | Completed |
 | TASK-036 | [DONE] Upgrade (link email/Google) + existing-account choice | 035 | M3, M4 | Completed |
 | TASK-037 | [DONE] Google sign-in | 036 | FR-A2 | Completed (OPEN-014 for iOS) |
-| TASK-038 | Delete account (client + Edge Function) | 036 | M14 | BK-004 |
+| TASK-038 | [DONE] Delete account (client + Edge Function) | 036 | M14 | Completed (BK-004 function provided) |
 
 ## Phase 4 — Core screens (local-only first)
 | ID | Task | Dep | Acceptance |

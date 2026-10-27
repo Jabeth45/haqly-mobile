@@ -171,5 +171,17 @@
   "orDivider": "OR",
   "@orDivider": {
     "description": "Divider text separating auth methods"
+  },
+  "deleteAccount": "Delete Account",
+  "@deleteAccount": {
+    "description": "Button or menu action to permanently delete user account"
+  },
+  "deleteAccountWarning": "Are you sure you want to delete your account? This action is permanent and will completely wipe all your records from both this device and the cloud.",
+  "@deleteAccountWarning": {
+    "description": "Warning message before deleting user account"
+  },
+  "deleteAccountConfirm": "Delete Everything",
+  "@deleteAccountConfirm": {
+    "description": "Confirmation button for permanent account deletion"
   }
 }

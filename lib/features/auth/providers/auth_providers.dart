@@ -276,6 +276,17 @@ class AuthNotifier extends Notifier<AuthState> {
     await sessionRepo.clearSession();
     state = const AuthState.unauthenticated();
   }
+
+  /// Permanently deletes the account and wipes all local and cloud data (FR-A7, S-08, M14).
+  Future<AuthResult> deleteAccount() async {
+    final accountRepo = ref.read(accountRepositoryProvider);
+    final result = await accountRepo.deleteAccount();
+
+    if (result.isSuccess) {
+      state = const AuthState.unauthenticated();
+    }
+    return result;
+  }
 }
 
 /// Provider for the reactive [AuthState].

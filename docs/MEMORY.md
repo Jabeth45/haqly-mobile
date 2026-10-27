@@ -1,6 +1,6 @@
 # MEMORY — current state (update at the end of EVERY session)
 
-Last updated: 2026-10-27 by: agent (TASK-037)
+Last updated: 2026-10-27 by: agent (TASK-038)
 
 ## Done
 - Documentation pack created and audited.
@@ -93,13 +93,21 @@ Last updated: 2026-10-27 by: agent (TASK-037)
     - Integrated Google Sign-In into `WelcomeScreen`, `LoginScreen`, `RegisterScreen`, and `UpgradeScreen`.
     - Added bilingual ARB keys for `continueWithGoogle` and `orDivider` in English and Amharic.
     - Fully covered by 9 automated tests across `auth_repository_test.dart` and `google_auth_test.dart` (215 total project tests green).
+  - TASK-038: Delete account (FR-A7, S-08, ADR-013, Scenario M14) implemented:
+    - Implemented Deno/TypeScript Supabase Edge Function `delete-account` in `supabase/functions/delete-account/index.ts` verifying caller JWT and invoking `auth.admin.deleteUser` with server service role (SECURITY S-08).
+    - Added atomic `wipeAllData()` on `AppDatabase` clearing all 8 SQLite tables in a single transaction.
+    - Extended `AuthRepository`, `FakeAuthRepository`, and `SupabaseAuthRepository` with `deleteAccount()` calling the Edge Function and signing out.
+    - Extended `AccountRepository` and `AccountRepositoryImpl` coordinating remote deletion, local database wipe, and session storage clearance.
+    - Extended `AuthNotifier` with `deleteAccount()` resetting auth state to `unauthenticated`.
+    - Added bilingual ARB keys (`deleteAccount`, `deleteAccountWarning`, `deleteAccountConfirm`) in English and Amharic.
+    - Verified with 5 automated unit and end-to-end flow tests across `database_wipe_test.dart`, `auth_repository_test.dart`, and `delete_account_test.dart` (220 total project tests green). Phase 3 (Shell and Identity) complete.
 
 ## In progress
-- Phase 3: Shell and identity (TASK-031 to TASK-037 completed).
-  - Next: TASK-038: Delete account (blocked by BK-004) or TASK-040: Home providers.
+- Phase 4: Core screens (local-only first).
+  - Next: TASK-040: Home providers (aggregated streams).
 
 ## Next
-- TASK-038: Delete account (blocked by BK-004) / TASK-040: Home providers.
+- TASK-040: Home providers (aggregated streams).
 
 ## Known issues / risks
 - Web schema to be diffed against proposed schema.

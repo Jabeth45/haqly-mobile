@@ -1,3 +1,4 @@
+import 'package:haqly_mobile/data/db/app_database.dart';
 import 'package:haqly_mobile/data/repositories/auth_repository.dart';
 import 'package:haqly_mobile/data/repositories/session_repository.dart';
 import 'package:haqly_mobile/data/sync/adopt.dart';
@@ -43,6 +44,10 @@ abstract class AccountRepository {
     required ExistingAccountChoice choice,
     String guestUserId = AuthState.localSentinel,
   });
+
+  /// Permanently deletes the user account: calls remote Edge Function to delete the auth user
+  /// and cloud rows, wipes local SQLite database, and clears session storage (FR-A7, M14).
+  Future<AuthResult> deleteAccount();
 }
 
 /// Production implementation of [AccountRepository].
@@ -52,12 +57,14 @@ class AccountRepositoryImpl implements AccountRepository {
     required this.authRepository,
     required this.sessionRepository,
     required this.pullService,
+    this.db,
   });
 
   final AdoptionService adoptionService;
   final AuthRepository authRepository;
   final SessionRepository sessionRepository;
   final PullService pullService;
+  final AppDatabase? db;
 
   @override
   Future<bool> hasGuestData({
@@ -173,6 +180,25 @@ class AccountRepositoryImpl implements AccountRepository {
 
     return authRes;
   }
+
+  @override
+  Future<AuthResult> deleteAccount() async {
+    // 1. Invoke remote deletion via AuthRepository (calls Supabase Edge Function)
+    final remoteRes = await authRepository.deleteAccount();
+    if (!remoteRes.isSuccess) {
+      return remoteRes;
+    }
+
+    // 2. Wipe local SQLite database completely
+    if (db != null) {
+      await db!.wipeAllData();
+    }
+
+    // 3. Clear local session tokens/storage
+    await sessionRepository.clearSession();
+
+    return const AuthResult.success();
+  }
 }
 
 /// In-memory fake implementation of [AccountRepository] for tests and defaults.
@@ -192,6 +218,8 @@ class FakeAccountRepository implements AccountRepository {
   bool isAdopted = false;
   bool isDiscarded = false;
   bool isHydratedFromCloud = false;
+  bool isWiped = false;
+  bool failDeletion = false;
 
   @override
   Future<bool> hasGuestData({
@@ -272,5 +300,18 @@ class FakeAccountRepository implements AccountRepository {
         break;
     }
     return AuthResult.success(userId: userId, email: email);
+  }
+
+  @override
+  Future<AuthResult> deleteAccount() async {
+    if (failDeletion) {
+      return const AuthResult.failure(
+        'Unable to delete account. Please try again.',
+      );
+    }
+    _hasGuestData = false;
+    _guestCount = 0;
+    isWiped = true;
+    return const AuthResult.success();
   }
 }

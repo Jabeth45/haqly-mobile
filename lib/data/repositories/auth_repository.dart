@@ -47,6 +47,10 @@ abstract class AuthRepository {
   /// Signs out of the active account.
   Future<void> signOut();
 
+  /// Permanently deletes the authenticated user account and associated cloud data.
+  /// Follows PRD FR-A7, SECURITY S-08, and Scenario M14.
+  Future<AuthResult> deleteAccount();
+
   /// Signs in using Google authentication.
   Future<AuthResult> signInWithGoogle({String? redirectTo});
 
@@ -88,6 +92,7 @@ class FakeAuthRepository implements AuthRepository {
   String fakeGoogleEmail = 'google_user@haqly.app';
   bool failGoogleSignIn = false;
   bool googleEmailInUse = false;
+  bool failAccountDeletion = false;
 
   @override
   String? get currentUserId => _currentUserId;
@@ -287,5 +292,21 @@ class FakeAuthRepository implements AuthRepository {
     _currentUserId = null;
     _currentUserEmail = null;
     _isAuthenticated = false;
+  }
+
+  @override
+  Future<AuthResult> deleteAccount() async {
+    if (failAccountDeletion) {
+      return const AuthResult.failure(
+        'Unable to delete account. Please try again.',
+      );
+    }
+    if (_currentUserEmail != null) {
+      _registeredUsers.remove(_currentUserEmail!.toLowerCase());
+    }
+    _currentUserId = null;
+    _currentUserEmail = null;
+    _isAuthenticated = false;
+    return const AuthResult.success();
   }
 }
